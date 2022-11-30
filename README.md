@@ -723,45 +723,72 @@ postgresql/$(oc get pods --namespace postgresql -o name | cut -d"/" -f2):/usr/db
 
 Execute create scripts with table space directory creation
 ```bash
+# Application engine playback
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/ae/postgresql/postgresql/create_ae_playback_db.sql'
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+--file=/usr/dbscript/ae/postgresql/postgresql/create_ae_playback_db.sql'
+
+# Application engine
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/ae/postgresql/postgresql/create_app_engine_db.sql'
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+--file=/usr/dbscript/ae/postgresql/postgresql/create_app_engine_db.sql'
+
+# Navigator
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/icndb; chown postgres:postgres /pgsqldata/icndb;'
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/ban/postgresql/postgresql/createICNDB.sql'
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+--file=/usr/dbscript/ban/postgresql/postgresql/createICNDB.sql'
+
+# Studio
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/icndb; chown postgres:postgres /pgsqldata/icndb;'
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+--file=/usr/dbscript/bas/postgresql/postgresql/create_bas_studio_db.sql'
+
+# BAW authoring 
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/bas/postgresql/postgresql/create_bas_studio_db.sql'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/baw-authoring/postgresql/postgresql/create_baw_db.sql'
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+--file=/usr/dbscript/baw-authoring/postgresql/postgresql/create_baw_db.sql'
+
+# BAW authoring DOCS
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/bawdocs; chown postgres:postgres /pgsqldata/bawdocs;'
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/fncm/postgresql/postgresql/createBAWDOCS.sql'
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+--file=/usr/dbscript/fncm/postgresql/postgresql/createBAWDOCS.sql'
+
+# BAW authoring DOS
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/bawdos; chown postgres:postgres /pgsqldata/bawdos;'
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/fncm/postgresql/postgresql/createBAWDOS.sql'
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+--file=/usr/dbscript/fncm/postgresql/postgresql/createBAWDOS.sql'
+
+# BAW authoring TOS
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/bawtos; chown postgres:postgres /pgsqldata/bawtos;'
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/fncm/postgresql/postgresql/createBAWTOS.sql'
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+--file=/usr/dbscript/fncm/postgresql/postgresql/createBAWTOS.sql'
+
+# BAW authoring CHOS
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/chos; chown postgres:postgres /pgsqldata/chos;'
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/fncm/postgresql/postgresql/createCHOS.sql'
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+--file=/usr/dbscript/fncm/postgresql/postgresql/createCHOS.sql'
+
+# FNCM GCD
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/gcd; chown postgres:postgres /pgsqldata/gcd;'
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/fncm/postgresql/postgresql/createGCDDB.sql'
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+--file=/usr/dbscript/fncm/postgresql/postgresql/createGCDDB.sql'
 ```
 
 Update secrets
 ```bash
-# ban
+# Navigator
 yq -i '.stringData.appLoginUsername = "cpadmin"' \
 /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/ban/ibm-ban-secret.yaml
 yq -i '.stringData.appLoginPassword = "Password"' \
@@ -774,7 +801,8 @@ yq -i '.stringData.ltpaPassword = "Password"' \
 /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/ban/ibm-ban-secret.yaml
 yq -i '.stringData.keystorePassword = "Password"' \
 /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/ban/ibm-ban-secret.yaml
-# fncm
+
+# FNCM
 yq -i '.stringData.appLoginUsername = "cpadmin"' \
 /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/fncm/ibm-fncm-secret.yaml
 yq -i '.stringData.appLoginPassword = "Password"' \
@@ -787,7 +815,10 @@ yq -i '.stringData.keystorePassword = "Password"' \
 
 Apply secrets
 ```bash
+# Switch to Project
 oc project cp4ba
+
+# Apply secrets
 /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/create_secret.sh
 ```
 
@@ -808,23 +839,101 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.1?topic=d
 ```
 
 ```text
-Enter for licence acceptance
-accept Yes
-Content No
-type 2
-enter to confirm selection
-profiel 1 small
-platform 1 ROKS
-zip file none - enter
-slow storage managed-nfs-storage
-medium storage managed-nfs-storage
-fast storage managed-nfs-storage
-RWO managed-nfs-storage
-proceed yes
+IMPORTANT: Review the IBM Cloud Pak for Business Automation license information here: 
+
+http://www14.software.ibm.com/cgi-bin/weblap/lap.pl?li_formnum=L-ASAY-CCQCLE
+
+Press any key to continue
+
+Do you accept the IBM Cloud Pak for Business Automation license (Yes/No, default: No): Yes
+
+Did you deploy Content CR (CRD: contents.icp4a.ibm.com) in current cluster? (Yes/No, default: No): No
+
+Starting to Install the Cloud Pak for Business Automation Operator...
+
+
+What type of deployment is being performed?
+1) Starter
+2) Production
+Enter a valid option [1 to 2]: 2
+
+*******************************************************
+            Summary of CP4BA capabilities              
+*******************************************************
+1. Cloud Pak capability to deploy: 
+   * Business Automation Workflow
+     (a) Workflow Authoring
+2. Optional components to deploy: 
+   * None
+*******************************************************
+
+[INFO] Above CP4BA capabilities is already selected in the cp4a-prerequisites.sh script
+Press any key to continue
+
+
+Please select the deployment profile (default: small).  Refer to the documentation in CP4BA Knowledge Center for details on profile.
+1) small
+2) medium
+3) large
+Enter a valid option [1 to 3]: 1
+
+Select the cloud platform to deploy: 
+1) RedHat OpenShift Kubernetes Service (ROKS) - Public Cloud
+2) Openshift Container Platform (OCP) - Private Cloud
+3) Other ( Certified Kubernetes Cloud Platform / CNCF)
+Enter a valid option [1 to 3]: 1 # Or 2 based on your platform
+
+Provide a URL to zip file that contains JDBC and/or ICCSAP drivers.
+(optional - if not provided, the Operator will configure using the default shipped JDBC driver): # Hit Enter - omit
+
+The Operator will configure using the default shipped JDBC driver.
+
+To provision the persistent volumes and volume claims
+please enter the file storage classname for slow storage(RWX): managed-nfs-storage
+please enter the file storage classname for medium storage(RWX): managed-nfs-storage
+please enter the file storage classname for fast storage(RWX): managed-nfs-storage
+please enter the block storage classname for Zen(RWO): managed-nfs-storage # Provide Block if possible
+
+*******************************************************
+                    Summary of input                   
+*******************************************************
+1. Cloud Pak capability to deploy: 
+   * Business Automation Workflow
+     (a) Workflow Authoring
+2. Optional components to deploy: 
+   * None
+3. File storage classname(RWX):
+   * Slow: managed-nfs-storage
+   * Medium: managed-nfs-storage
+   * Fast: managed-nfs-storage
+4. Block storage classname(RWO): managed-nfs-storage
+5. URL to zip file for JDBC and/or ICCSAP drivers: 
+*******************************************************
+
+Verify that the information above is correct.
+To proceed with the deployment, enter "Yes".
+To make changes, enter "No" (default: No): Yes
+
+Creating the Custom Resource of the Cloud Pak for Business Automation operator...
+
+Applying value in property file into final CR
+[✔] Applied value in property file into final CR under /usr/install/cert-kubernetes/scripts/generated-cr
+Please confirm final custom resource under /usr/install/cert-kubernetes/scripts/generated-cr
+
+The custom resource file used is: "/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml"
+
+ATTENTION: If the cluster is running a Linux on Z (s390x)/Power architecture, remove the baml_configuration section from "/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml" before you apply the custom resource. Business Automation Machine Learning Server (BAML) is not supported on this architecture.
+
+
+To monitor the deployment status, follow the Operator logs.
+For details, refer to the troubleshooting section in Knowledge Center here: 
+https://www.ibm.com/support/knowledgecenter/SSYHZ8_22.0.1/com.ibm.dba.install/op_topics/tsk_trbleshoot_operators.html
 ```
 
 Update CR file  
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.1?topic=deployment-checking-completing-your-custom-resource
+
+Licenses
 ```bash
 yq -i '.spec.shared_configuration.sc_deployment_fncm_license = "non-production"' \
 /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
@@ -832,14 +941,30 @@ yq -i '.spec.shared_configuration.sc_deployment_baw_license = "non-production"' 
 /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 yq -i '.spec.shared_configuration.sc_deployment_license = "non-production"' \
 /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+```
+
+Studio
+```bash
 yq -i '.spec.bastudio_configuration.admin_user  = "cpadmin"' \
 /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+```
+
+Application engine playback
+```bash
 yq -i '.spec.bastudio_configuration.playback_server.admin_user = "cpadmin"' \
 /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 yq -i '.spec.application_engine_configuration[0].admin_user = "cpadmin"' \
 /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+```
+
+BAW Authoring
+```bash
 yq -i '.spec.workflow_authoring_configuration.admin_user = "cpadmin"' \
 /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+```
+
+Intialization
+```bash
 yq -i '.spec.initialize_configuration.ic_ldap_creation.ic_ldap_admin_user_name[0] = "cpadmin"' \
 /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 yq -i '.spec.initialize_configuration.ic_ldap_creation.ic_ldap_admins_groups_name[0] = "cpadmins"' \
