@@ -1,8 +1,27 @@
-# Cloud Pak for Business Automation Production deployment manual installation
+# Cloud Pak for Business Automation Production deployment manual installation ✍️<!-- omit in toc -->
 
 For version 22.0.1 IF004
 
 Installs BAW Authoring environement.
+
+- [Disclaimer ✋](#disclaimer-)
+- [Prerequisites](#prerequisites)
+- [Needed tooling](#needed-tooling)
+- [Access info after deployment](#access-info-after-deployment)
+- [Install preparation](#install-preparation)
+- [Command line preparation in install Pod](#command-line-preparation-in-install-pod)
+- [Prerequisite software](#prerequisite-software)
+  - [OpenLdap](#openldap)
+  - [PostgreSql](#postgresql)
+- [Cloud Pak for Business Automation](#cloud-pak-for-business-automation)
+  - [Get certified kubernetes folder](#get-certified-kubernetes-folder)
+  - [Cluster setup](#cluster-setup)
+  - [Prepare property files](#prepare-property-files)
+  - [Generate, update and apply SQL and Secret files and validate the connectivity](#generate-update-and-apply-sql-and-secret-files-and-validate-the-connectivity)
+  - [Create and deploy CP4BA CR](#create-and-deploy-cp4ba-cr)
+  - [Post-installation](#post-installation)
+- [Contacts](#contacts)
+- [Notice](#notice)
 
 ## Disclaimer ✋
 
@@ -447,8 +466,10 @@ spec:
 
 Set max transactions
 ```bash
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb -c "ALTER SYSTEM SET max_prepared_transactions = 200;"'
-oc --namespace postgresql delete pod $(oc get pods --namespace postgresql -o name | cut -d"/" -f2)
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb -c "ALTER SYSTEM SET max_prepared_transactions = 200;"'
+oc --namespace postgresql delete pod \
+$(oc get pods --namespace postgresql -o name | cut -d"/" -f2)
 ```
 
 ## Cloud Pak for Business Automation
@@ -459,9 +480,11 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.1?topic=d
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.1?topic=deployment-preparing-client-connect-cluster
 ```bash
-curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/ibm-cp-automation/4.0.4/ibm-cp-automation-4.0.4.tgz --output /usr/install/ibm-cp-automation-4.0.4.tgz
+curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/ibm-cp-automation/4.0.4/ibm-cp-automation-4.0.4.tgz \
+--output /usr/install/ibm-cp-automation-4.0.4.tgz
 tar xzvf /usr/install/ibm-cp-automation-4.0.4.tgz -C /usr/install
-tar xvf /usr/install/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/cert-k8s-22.0.1.tar -C /usr/install
+tar xvf /usr/install/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/cert-k8s-22.0.1.tar \
+-C /usr/install
 ```
 
 ### Cluster setup
@@ -615,39 +638,66 @@ oc cp /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/dbscript postgres
 
 Execute create scripts with table space directory creation
 ```bash
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/ae/postgresql/postgresql/create_ae_playback_db.sql'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/ae/postgresql/postgresql/create_app_engine_db.sql'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'mkdir /pgsqldata/icndb; chown postgres:postgres /pgsqldata/icndb;'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/ban/postgresql/postgresql/createICNDB.sql'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'mkdir /pgsqldata/icndb; chown postgres:postgres /pgsqldata/icndb;'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/bas/postgresql/postgresql/create_bas_studio_db.sql'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/baw-authoring/postgresql/postgresql/create_baw_db.sql'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'mkdir /pgsqldata/bawdocs; chown postgres:postgres /pgsqldata/bawdocs;'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/fncm/postgresql/postgresql/createBAWDOCS.sql'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'mkdir /pgsqldata/bawdos; chown postgres:postgres /pgsqldata/bawdos;'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/fncm/postgresql/postgresql/createBAWDOS.sql'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'mkdir /pgsqldata/bawtos; chown postgres:postgres /pgsqldata/bawtos;'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/fncm/postgresql/postgresql/createBAWTOS.sql'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'mkdir /pgsqldata/chos; chown postgres:postgres /pgsqldata/chos;'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/fncm/postgresql/postgresql/createCHOS.sql'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'mkdir /pgsqldata/gcd; chown postgres:postgres /pgsqldata/gcd;'
-oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/fncm/postgresql/postgresql/createGCDDB.sql'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/ae/postgresql/postgresql/create_ae_playback_db.sql'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/ae/postgresql/postgresql/create_app_engine_db.sql'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'mkdir /pgsqldata/icndb; chown postgres:postgres /pgsqldata/icndb;'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/ban/postgresql/postgresql/createICNDB.sql'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'mkdir /pgsqldata/icndb; chown postgres:postgres /pgsqldata/icndb;'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/bas/postgresql/postgresql/create_bas_studio_db.sql'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/baw-authoring/postgresql/postgresql/create_baw_db.sql'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'mkdir /pgsqldata/bawdocs; chown postgres:postgres /pgsqldata/bawdocs;'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/fncm/postgresql/postgresql/createBAWDOCS.sql'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'mkdir /pgsqldata/bawdos; chown postgres:postgres /pgsqldata/bawdos;'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/fncm/postgresql/postgresql/createBAWDOS.sql'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'mkdir /pgsqldata/bawtos; chown postgres:postgres /pgsqldata/bawtos;'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/fncm/postgresql/postgresql/createBAWTOS.sql'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'mkdir /pgsqldata/chos; chown postgres:postgres /pgsqldata/chos;'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/fncm/postgresql/postgresql/createCHOS.sql'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'mkdir /pgsqldata/gcd; chown postgres:postgres /pgsqldata/gcd;'
+oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb --file=/usr/dbscript/fncm/postgresql/postgresql/createGCDDB.sql'
 ```
 
 Update secrets
 ```bash
 # ban
-yq -i '.stringData.appLoginUsername = "cpadmin"' /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/ban/ibm-ban-secret.yaml
-yq -i '.stringData.appLoginPassword = "Password"' /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/ban/ibm-ban-secret.yaml
-yq -i 'del(.stringData.jMailUsername)' /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/ban/ibm-ban-secret.yaml
-yq -i 'del(.stringData.jMailPassword)' /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/ban/ibm-ban-secret.yaml
-yq -i '.stringData.ltpaPassword = "Password"' /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/ban/ibm-ban-secret.yaml
-yq -i '.stringData.keystorePassword = "Password"' /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/ban/ibm-ban-secret.yaml
+yq -i '.stringData.appLoginUsername = "cpadmin"' \
+/usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/ban/ibm-ban-secret.yaml
+yq -i '.stringData.appLoginPassword = "Password"' \
+/usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/ban/ibm-ban-secret.yaml
+yq -i 'del(.stringData.jMailUsername)' \
+/usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/ban/ibm-ban-secret.yaml
+yq -i 'del(.stringData.jMailPassword)' \
+/usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/ban/ibm-ban-secret.yaml
+yq -i '.stringData.ltpaPassword = "Password"' \
+/usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/ban/ibm-ban-secret.yaml
+yq -i '.stringData.keystorePassword = "Password"' \
+/usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/ban/ibm-ban-secret.yaml
 # fncm
-yq -i '.stringData.appLoginUsername = "cpadmin"' /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/fncm/ibm-fncm-secret.yaml
-yq -i '.stringData.appLoginPassword = "Password"' /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/fncm/ibm-fncm-secret.yaml
-yq -i '.stringData.ltpaPassword = "Password"' /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/fncm/ibm-fncm-secret.yaml
-yq -i '.stringData.keystorePassword = "Password"' /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/fncm/ibm-fncm-secret.yaml
+yq -i '.stringData.appLoginUsername = "cpadmin"' \
+/usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/fncm/ibm-fncm-secret.yaml
+yq -i '.stringData.appLoginPassword = "Password"' \
+/usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/fncm/ibm-fncm-secret.yaml
+yq -i '.stringData.ltpaPassword = "Password"' \
+/usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/fncm/ibm-fncm-secret.yaml
+yq -i '.stringData.keystorePassword = "Password"' \
+/usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/fncm/ibm-fncm-secret.yaml
 ```
 
 Apply secrets
@@ -691,25 +741,44 @@ proceed yes
 Update CR file  
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.1?topic=deployment-checking-completing-your-custom-resource
 ```bash
-yq -i '.spec.shared_configuration.sc_deployment_fncm_license = "non-production"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.shared_configuration.sc_deployment_baw_license = "non-production"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.shared_configuration.sc_deployment_license = "non-production"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.bastudio_configuration.admin_user  = "cpadmin"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.bastudio_configuration.playback_server.admin_user = "cpadmin"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.application_engine_configuration[0].admin_user = "cpadmin"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.workflow_authoring_configuration.admin_user = "cpadmin"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.initialize_configuration.ic_ldap_creation.ic_ldap_admin_user_name[0] = "cpadmin"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.initialize_configuration.ic_ldap_creation.ic_ldap_admins_groups_name[0] = "cpadmins"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[0].oc_cpe_obj_store_admin_user_groups[0] = "cpadmin"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[0].oc_cpe_obj_store_admin_user_groups[1] = "cpadmins"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[1].oc_cpe_obj_store_admin_user_groups[0] = "cpadmin"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[1].oc_cpe_obj_store_admin_user_groups[1] = "cpadmins"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[2].oc_cpe_obj_store_workflow_data_tbl_space = "bawtos_tbs"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[2].oc_cpe_obj_store_workflow_admin_group = "cpadmins"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[2].oc_cpe_obj_store_workflow_config_group = "cpadmins"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[2].oc_cpe_obj_store_workflow_pe_conn_point_name = "pe_conn_batos"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[2].oc_cpe_obj_store_admin_user_groups[0] = "cpadmin"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[2].oc_cpe_obj_store_admin_user_groups[1] = "cpadmins"' /usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.shared_configuration.sc_deployment_fncm_license = "non-production"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.shared_configuration.sc_deployment_baw_license = "non-production"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.shared_configuration.sc_deployment_license = "non-production"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.bastudio_configuration.admin_user  = "cpadmin"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.bastudio_configuration.playback_server.admin_user = "cpadmin"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.application_engine_configuration[0].admin_user = "cpadmin"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.workflow_authoring_configuration.admin_user = "cpadmin"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.initialize_configuration.ic_ldap_creation.ic_ldap_admin_user_name[0] = "cpadmin"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.initialize_configuration.ic_ldap_creation.ic_ldap_admins_groups_name[0] = "cpadmins"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[0].oc_cpe_obj_store_admin_user_groups[0] = "cpadmin"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[0].oc_cpe_obj_store_admin_user_groups[1] = "cpadmins"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[1].oc_cpe_obj_store_admin_user_groups[0] = "cpadmin"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[1].oc_cpe_obj_store_admin_user_groups[1] = "cpadmins"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[2].oc_cpe_obj_store_workflow_data_tbl_space = "bawtos_tbs"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[2].oc_cpe_obj_store_workflow_admin_group = "cpadmins"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[2].oc_cpe_obj_store_workflow_config_group = "cpadmins"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[2].oc_cpe_obj_store_workflow_pe_conn_point_name = "pe_conn_batos"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[2].oc_cpe_obj_store_admin_user_groups[0] = "cpadmin"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.initialize_configuration.ic_obj_store_creation.object_stores[2].oc_cpe_obj_store_admin_user_groups[1] = "cpadmins"' \
+/usr/install/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
 Apply CR  
