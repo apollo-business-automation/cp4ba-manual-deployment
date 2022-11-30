@@ -2,7 +2,7 @@
 
 For version 22.0.1 IF004
 
-Installs BAW Authoring environement.
+Installs BAW Authoring environment.
 
 - [Disclaimer ✋](#disclaimer-)
 - [Prerequisites](#prerequisites)
@@ -38,8 +38,9 @@ Not for production use. Suitable for Demo and PoC environments - but with Produc
 
 - Empty OpenShift cluster
 - With direct internet connection
-- File RWX StorageClass
-- Block RWO StorageClass (optional)
+- File RWX StorageClass - in this case managed-nfs-storage is used everywhere, feel free to find and replace
+- Block RWO StorageClass (optional) - in this case managed-nfs-storage is used which is not Block. When asked for RWO class use your own Block based.
+- cluster admin user
 
 ## Needed tooling
 
@@ -70,9 +71,9 @@ Cloud Pak for Business Automation
 
 ## Install preparation
 
-In you OCP cluster create Project install.
+In you OCP cluster create Project install using OpenShift console.
 
-Create PVC where all files used for installation would be kept if you would need to reinstantiate the install Pod.
+Create PVC where all files used for installation would be kept if you would need to re-instantiate the install Pod.
 ```yaml
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -89,7 +90,8 @@ spec:
   volumeMode: Filesystem
 ```
 
-Create a pod from which the install will be performed with the following definition.
+Create a pod from which the install will be performed with the following definition.  
+It is ready when the message *Install pod - Ready* is in the Log.
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -134,7 +136,7 @@ spec:
           kubectl version;
           yq --version;
           while true;
-          do echo 'Apollo one-shot servicing pod - Ready - Enter it via Terminal and \"bash -l\" - Delete it after you are done.';
+          do echo 'Install pod - Ready - Enter it via Terminal and \"bash\"';
           sleep 300; done"]      
       imagePullPolicy: IfNotPresent
       volumeMounts:
@@ -148,7 +150,7 @@ spec:
 
 ## Command line preparation in install Pod
 
-This neds to be done if you don't perform this in one go and you come back to resume.
+This needs to be done if you don't perform this in one go and you come back to resume.
 
 Open Terminal window of the newly created pod.
 
@@ -159,7 +161,8 @@ bash
 
 Login with your OC user using your own token and server address.
 ```bash
-oc login --token=sha256~kwZnxyz1Uekt-IWQJKsXmvabca4LAJtpiBlFiMEPLZ_U --server=https://c108-e.eu-gb.containers.cloud.ibm.com:31624
+oc login --token=sha256~kwZnxyz1Uekt-IWQJKsXmvabca4LAJtpiBlFiMEPLZ_U \
+--server=https://c108-e.eu-gb.containers.cloud.ibm.com:31624
 ```
 
 ## Prerequisite software
@@ -168,7 +171,7 @@ CP4BA needs at least LDAP and Database. In this deployment OpenLDAP and postgres
 
 You would normally use your own production ready instances.
 
-Please note that OpenLDAP is wokring but is not officially supported.
+Please note that OpenLDAP is working but is not officially supported.
 
 ### OpenLdap
 
@@ -293,7 +296,8 @@ roleRef:
 
 Install OpenLdap
 ```bash
-helm install openldap helm-openldap/openldap-stack-ha -f openldap-values.yaml -n openldap --version 3.0.2
+helm install openldap helm-openldap/openldap-stack-ha \
+-f /usr/install/openldap-values.yaml -n openldap --version 3.0.2
 ```
 
 Add Route for phpLdapAdmin
@@ -316,6 +320,8 @@ spec:
   wildcardPolicy: None
 " | oc apply -f -
 ```
+
+Wait for all pods in openldap Project to be Ready 1/1.
 
 ### PostgreSql
 
@@ -382,7 +388,7 @@ spec:
 " | oc apply -f -
 ```
 
-Create PVC for tablespaces as they should not be in PGDATA
+Create PVC for table spaces as they should not be in PGDATA
 ```bash
 echo "
 kind: PersistentVolumeClaim
@@ -464,13 +470,20 @@ spec:
 " | oc apply -f -
 ```
 
+Wait for pod in postgresql Project to become Ready 1/1.
+
 Set max transactions
 ```bash
+# Set the value
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb -c "ALTER SYSTEM SET max_prepared_transactions = 200;"'
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+-c "ALTER SYSTEM SET max_prepared_transactions = 200;"'
+# Restart the pod
 oc --namespace postgresql delete pod \
 $(oc get pods --namespace postgresql -o name | cut -d"/" -f2)
 ```
+
+Wait for pod in postgresql Project to become Ready 1/1.
 
 ## Cloud Pak for Business Automation
 
