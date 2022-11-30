@@ -41,6 +41,7 @@ Not for production use. Suitable for Demo and PoC environments - but with Produc
 - File RWX StorageClass - in this case managed-nfs-storage is used everywhere, feel free to find and replace
 - Block RWO StorageClass (optional) - in this case managed-nfs-storage is used which is not Block. When asked for RWO class use your own Block based.
 - cluster admin user
+- IBM entitlement key from https://myibm.ibm.com/products-services/containerlibrary
 
 ## Needed tooling
 
@@ -478,6 +479,7 @@ Set max transactions
 oc --namespace postgresql exec deploy/postgresql -- /bin/bash -c \
 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
 -c "ALTER SYSTEM SET max_prepared_transactions = 200;"'
+
 # Restart the pod
 oc --namespace postgresql delete pod \
 $(oc get pods --namespace postgresql -o name | cut -d"/" -f2)
@@ -493,10 +495,17 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.1?topic=d
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.1?topic=deployment-preparing-client-connect-cluster
 ```bash
-curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/ibm-cp-automation/4.0.4/ibm-cp-automation-4.0.4.tgz \
+# Download the package
+curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
+ibm-cp-automation/4.0.4/ibm-cp-automation-4.0.4.tgz \
 --output /usr/install/ibm-cp-automation-4.0.4.tgz
+
+# Extract the package
 tar xzvf /usr/install/ibm-cp-automation-4.0.4.tgz -C /usr/install
-tar xvf /usr/install/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/cert-k8s-22.0.1.tar \
+
+# Extract cert-kubernetes
+tar xvf /usr/install/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-k8s-22.0.1.tar \
 -C /usr/install
 ```
 
@@ -504,25 +513,17 @@ tar xvf /usr/install/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/cr
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.1?topic=cluster-setting-up-by-running-script
 
-Change directory to scripts
 ```bash
-cd /usr/install/cert-kubernetes/scripts
-```
-
-```bash
-./cp4a-clusteradmin-setup.sh
-# TODO
-# echo -e "1\n
-# 2\n
-# No\n
-# cp4ba\n
-# 1\n
-# Yes\n
-# eyJ0eXAiOiJKV1ciOiJIUzI1...asdf\n
-# " | ./cp4a-clusteradmin-setup.sh
+/usr/install/cert-kubernetes/scripts/cp4a-clusteradmin-setup.sh
 ```
 
 ```text
+Select the cloud platform to deploy: 
+1) RedHat OpenShift Kubernetes Service (ROKS) - Public Cloud
+2) Openshift Container Platform (OCP) - Private Cloud
+3) Other ( Certified Kubernetes Cloud Platform / CNCF)
+Enter a valid option [1 to 3]: 1 # Or 2 based on your platform
+
 What type of deployment is being performed?
 1) Starter
 2) Production
@@ -536,13 +537,12 @@ Enter the name for a new project or an existing project (namespace): cp4ba
 The Cloud Pak for Business Automation Operator (Pod, CSV, Subscription) not found in cluster
 Continue....
 
-Project "cp4ba" already exists! Continue...
+Using project cp4ba...
 
 Here are the existing users on this cluster: 
 1) Cluster Admin
-2) IAM#dtev2@us.ibm.com
-3) IAM#jdusek@cz.ibm.com
-Enter an existing username in your cluster, valid option [1 to 3], non-admin is suggested: 1
+2) Your User
+Enter an existing username in your cluster, valid option [1 to 3], non-admin is suggested: 2
 ATTENTION: When you run cp4a-deployment.sh script, please use cluster admin user.
 
 
@@ -551,35 +551,100 @@ https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.1?topic=images-get
 
 Do you have a Cloud Pak for Business Automation Entitlement Registry key (Yes/No, default: No): Yes
 
-Enter your Entitlement Registry key: 
+Enter your Entitlement Registry key: # it is OK that when you paste nothing is seen - it is for security.
 Verifying the Entitlement Registry key...
 Login Succeeded!
+Entitlement Registry key is valid.
+
+Please use available storage classes.
+
+The existing storage classes in the cluster: 
+...omitted
+
+Creating docker-registry secret for Entitlement Registry key in project cp4ba...
+secret/ibm-entitlement-key created
+Done
+ibm-cp4a-operator-catalog  ibm-cp4a-operator  grpc   IBM  26h
+Found existing ibm operator catalog source, updating it
+catalogsource.operators.coreos.com/ibm-cp4a-operator-catalog unchanged
+catalogsource.operators.coreos.com/ibm-cp-automation-foundation-catalog unchanged
+catalogsource.operators.coreos.com/ibm-automation-foundation-core-catalog unchanged
+catalogsource.operators.coreos.com/opencloud-operators unchanged
+catalogsource.operators.coreos.com/bts-operator unchanged
+catalogsource.operators.coreos.com/cloud-native-postgresql-catalog unchanged
+IBM Operator Catalog source updated!
+Waiting for CP4A Operator Catalog pod initialization
+CP4BA Operator Catalog is running ibm-cp4a-operator-catalog-g624g  1/1   Running  0  26h
+operatorgroup.operators.coreos.com/ibm-cp4a-operator-catalog-group created
+CP4BA Operator Group Created!
+subscription.operators.coreos.com/ibm-cp4a-operator-catalog-subscription created
+CP4BA Operator Subscription Created!
+
+Waiting for CP4BA operator pod initialization
+No resources found in cp4ba namespace.
+
+CP4A operator is running ibm-cp4a-operator-76c4c85584-pjxrf  1/1   Running   0     17s
+
+Waiting for CP4BA Content operator pod initialization
+CP4A Content operator is running ibm-content-operator-58fb9986d7-ccpzk   1/1   Running   0     32s
+
+
+Label the default namespace to allow network policies to open traffic to the ingress controller using a namespaceSelector...namespace/default not labeled
+Done
+
+Storage classes are needed to run the deployment script. For the Starter deployment scenario, you may use one (1) storage class.  For an Production deployment, the deployment script will ask for three (3) storage classes to meet the slow, medium, and fast storage for the configuration of CP4A components.  If you don't have three (3) storage classes, you can use the same one for slow, medium, or fast.  Note that you can get the existing storage class(es) in the environment by running the following command: oc get storageclass. Take note of the storage classes that you want to use for deployment. 
 ```
+
+Wait until the script finishes.
 
 ### Prepare property files
 
-Based on TODO documentation
-
-Generate properties for componnets that you would like to deploy.
+Generate properties for components that you would like to deploy.
 ```bash
-./cp4a-prerequisites.sh -m property
+/usr/install/cert-kubernetes/scripts/cp4a-prerequisites.sh -m property
 ```
 
 Answer as follows.
 ```text
-5a
-Enter
-No
-Enter
-No BAI
-2 SDS
-4 PostgreSql
-postgresql alias
+Tips:Press [ENTER] to accept the default (None of the patterns is selected)
+Enter a valid option [1 to 4, 5a, 5b, 6, 7a, 7b]: 5a
+
+Hit Enter to continue.
+
+Do you want to enable Business Automation Application Data Persistence? (Yes/No): No
+
+Pattern "(a) Workflow Authoring": Select optional components: 
+1) Business Automation Insights 
+
+Tips: Press [ENTER] to accept the default (None of the components is selected)
+Enter a valid option [1 to 1 or ENTER]: 
+
+Hit Enter to continue.
+
+What is the LDAP type used for this deployment? 
+1) Microsoft Active Directory
+2) Tivoli Directory Server / Security Directory Server
+Enter a valid option [1 to 2]: 2
+
+What is the Database type used for this deployment? 
+1) IBM Db2 Database
+2) Oracle
+3) Microsoft SQL Server
+4) PostgreSQL
+Enter a valid option [1 to 4]: 4
+
+Please input the alias name(s) for database server(s)/instance(s) which will be used by CP4BA deployment.
+(NOTES: NOT host name of database server, and CAN NOT include dot[.] character)
+(NOTE: This key supports comma-separated lists (for example: dbserver1,dbserver2,dbserver3)
+The alias name(s): postgresql
 ```
 
 Update values for cp4ba_LDAP.property
 ```bash
+# Backup generated file
 cp /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property.bak
+
+# Update generated file with real values
 sed -i \
 -e 's/LDAP_SERVER="<Required>"/LDAP_SERVER="openldap.openldap.svc.cluster.local"/g' \
 -e 's/LDAP_PORT="<Required>"/LDAP_PORT="389"/g' \
@@ -601,7 +666,10 @@ sed -i \
 
 Update values for cp4ba_db_name_user.property
 ```bash
+# Backup generated file
 cp /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
+
+# Update generated file with real values
 sed -i \
 -e 's/postgresql.GCD_DB_USER_NAME="<youruser1>"/postgresql.GCD_DB_USER_NAME="gcd"/g' \
 -e 's/postgresql.GCD_DB_USER_PASSWORD="<yourpassword>"/postgresql.GCD_DB_USER_PASSWORD="Password"/g' \
@@ -628,7 +696,10 @@ sed -i \
 
 Update values for cp4ba_db_server.property
 ```bash
+# Backup generated file
 cp /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property.bak
+
+# Update generated file with real values
 sed -i \
 -e 's/postgresql.DATABASE_SERVERNAME="<Required>"/postgresql.DATABASE_SERVERNAME="postgresql.postgresql.svc.cluster.local"/g' \
 -e 's/postgresql.DATABASE_PORT="<Required>"/postgresql.DATABASE_PORT="5432"/g' \
@@ -638,7 +709,7 @@ sed -i \
 
 ### Generate, update and apply SQL and Secret files and validate the connectivity
 
-SQL and Secrets generation
+Generate SQL and Secrets
 ```bash
 /usr/install/cert-kubernetes/scripts/cp4a-prerequisites.sh -m generate
 ```
@@ -646,7 +717,8 @@ PostgreSql instance configured in a way that tablespace path in some of the gene
 
 Copy create scripts to PostgreSQL instance
 ```bash
-oc cp /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/dbscript postgresql/$(oc get pods --namespace postgresql -o name | cut -d"/" -f2):/usr/dbscript
+oc cp /usr/install/cert-kubernetes/scripts/cp4ba-prerequisites/dbscript \
+postgresql/$(oc get pods --namespace postgresql -o name | cut -d"/" -f2):/usr/dbscript
 ```
 
 Execute create scripts with table space directory creation
