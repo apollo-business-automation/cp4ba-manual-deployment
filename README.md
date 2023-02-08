@@ -113,6 +113,7 @@ spec:
         ["-c","cd /usr;
           yum install podman -y;
           yum install ncurses -y;
+          yum install jq -y;
           curl -O https://download.java.net/java/GA/jdk9/9/binaries/openjdk-9_linux-x64_bin.tar.gz;
           tar -xvf openjdk-9_linux-x64_bin.tar.gz;
           ln -fs /usr/jdk-9/bin/java /usr/bin/java;
@@ -139,6 +140,7 @@ spec:
           oc version;
           kubectl version;
           yq --version;
+          jq --version;
           while true;
           do echo 'Install pod - Ready - Enter it via Terminal and \"bash\"';
           sleep 300; done"]      
@@ -1135,6 +1137,38 @@ Wait for the deployment to be completed. Can be determined by looking in Project
 
 ### Post-installation
 
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=deployment-recommended-validating-your-production you can further verify the environemnts and get important information.
+```bash
+oc project cp4ba-dev
+/usr/install/cert-kubernetes-dev/scripts/cp4a-post-install.sh --help
+```
+
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=cpbaf-business-automation-studio  
+You need to setup permissions for your users.  
+Before that you need to add cpfsadmin user to Zen to be able to follow step 3 in the Docs.
+```bash
+# Get password of zen initial admin
+zen_admin_password=`oc get secret admin-user-details -n cp4ba-dev -o jsonpath='{.data.initial_admin_password}' | base64 -d`
+echo $zen_admin_password
+
+# Get apps endpoint of your openshift
+apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-dev -o jsonpath='{.spec.domain}'`
+echo $apps_endpoint
+
+# Get zen token
+zen_token=`curl --silent -k -H "Content-Type: application/json" -d '{"username":"admin","password":"'$zen_admin_password'"}' \
+https://cpd-cp4ba-dev.${apps_endpoint}/icp4d-api/v1/authorize | jq -r ".token"`
+echo $zen_token
+
+# Add cpfsadmin user to zen as administrator
+curl -kv -H "Content-Type: application/json" -H "Authorization: Bearer $zen_token" \
+-d '{"username":"cpfsadmin","displayName":"cpfsadmin", "user_roles":["zen_administrator_role","iaf-automation-admin","iaf-automation-analyst","iaf-automation-developer","iaf-automation-operator","zen_user_role"]}' \
+https://cpd-cp4ba-dev.${apps_endpoint}/usermgmt/v1/user
+
+# To get cpfsadmin password
+oc get secret platform-auth-idp-credentials -n cp4ba-dev -o jsonpath='{.data.admin_password}' | base64 -d
+```
+
 Follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=deployment-completing-post-installation-tasks as needed.
 
 Custom CPFS console TLS - follow https://www.ibm.com/docs/en/cloud-paks/1.0?topic=management-replacing-foundational-services-endpoint-certificates#rep_cs370
@@ -1757,8 +1791,39 @@ Wait for the deployment to be completed. Can be determined by looking in Project
 
 ### Post-installation
 
-Follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=deployment-completing-post-installation-tasks as needed.
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=deployment-recommended-validating-your-production you can further verify the environemnts and get important information.
+```bash
+oc project cp4ba-test
+/usr/install/cert-kubernetes-test/scripts/cp4a-post-install.sh --help
+```
 
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=cpbaf-business-automation-studio  
+You need to setup permissions for your users.  
+Before that you need to add cpfsadmin user to Zen to be able to follow step 3 in the Docs.
+```bash
+# Get password of zen initial admin
+zen_admin_password=`oc get secret admin-user-details -n cp4ba-test -o jsonpath='{.data.initial_admin_password}' | base64 -d`
+echo $zen_admin_password
+
+# Get apps endpoint of your openshift
+apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-test -o jsonpath='{.spec.domain}'`
+echo $apps_endpoint
+
+# Get zen token
+zen_token=`curl --silent -k -H "Content-Type: application/json" -d '{"username":"admin","password":"'$zen_admin_password'"}' \
+https://cpd-cp4ba-test.${apps_endpoint}/icp4d-api/v1/authorize | jq -r ".token"`
+echo $zen_token
+
+# Add cpfsadmin user to zen as administrator
+curl -kv -H "Content-Type: application/json" -H "Authorization: Bearer $zen_token" \
+-d '{"username":"cpfsadmin","displayName":"cpfsadmin", "user_roles":["zen_administrator_role","iaf-automation-admin","iaf-automation-analyst","iaf-automation-developer","iaf-automation-operator","zen_user_role"]}' \
+https://cpd-cp4ba-test.${apps_endpoint}/usermgmt/v1/user
+
+# To get cpfsadmin password
+oc get secret platform-auth-idp-credentials -n cp4ba-test -o jsonpath='{.data.admin_password}' | base64 -d
+```
+
+Follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=deployment-completing-post-installation-tasks as needed.
 
 Custom CPFS console TLS - follow https://www.ibm.com/docs/en/cloud-paks/1.0?topic=management-replacing-foundational-services-endpoint-certificates#rep_cs370
 
@@ -1777,4 +1842,4 @@ IBM Czech Republic
 
 ## Notice
 
-© Copyright IBM Corporation 2022.
+© Copyright IBM Corporation 2023.
