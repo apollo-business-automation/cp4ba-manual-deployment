@@ -66,6 +66,7 @@ Provided in the install Pod.
 - oc
 - kubectl
 - yq
+- jq
 
 ## Install preparation
 
@@ -1115,7 +1116,7 @@ sed -i \
 Apply CR  
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=deployment-deploying-custom-resource-you-created-script
 ```bash
-oc apply -f /usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+oc apply -n cp4ba-dev -f /usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
 Wait for the deployment to be completed. Can be determined by looking in Project cp4ba-dev in Kind ICP4ACluster, instance named icp4adeploy to have the following conditions:
@@ -1145,7 +1146,7 @@ oc project cp4ba-dev
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=cpbaf-business-automation-studio  
 You need to setup permissions for your users.  
-Before that you need to add cpfsadmin user to Zen to be able to follow step 3 in the Docs.
+Before that you need to add cpfsadmin user to Zen to be able to follow step 3 in the Docs. (TODO remove when done automatically by Zen)
 ```bash
 # Get password of zen initial admin
 zen_admin_password=`oc get secret admin-user-details -n cp4ba-dev -o jsonpath='{.data.initial_admin_password}' | base64 -d`
@@ -1156,6 +1157,7 @@ apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-dev -o jso
 echo $apps_endpoint
 
 # Get zen token
+# Based on https://cloud.ibm.com/apidocs/cloud-pak-data/cloud-pak-data-4.5.0#getauthorizationtoken
 zen_token=`curl --silent -k -H "Content-Type: application/json" -d '{"username":"admin","password":"'$zen_admin_password'"}' \
 https://cpd-cp4ba-dev.${apps_endpoint}/icp4d-api/v1/authorize | jq -r ".token"`
 echo $zen_token
@@ -1766,10 +1768,16 @@ sed -i \
 /usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=parameters-business-automation-workflow-runtime-workstream-services  
+Set env type to Test
+```bash
+yq -i '.spec.baw_configuration[0].env_type = "Test"' /usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+```
+
 Apply CR  
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=deployment-deploying-custom-resource-you-created-script
 ```bash
-oc apply -f /usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+oc apply -n cp4ba-test -f /usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
 Wait for the deployment to be completed. Can be determined by looking in Project cp4ba-test in Kind ICP4ACluster, instance named icp4adeploy to have the following conditions:
@@ -1831,13 +1839,108 @@ Custom Zen certificates - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-a
 
 Custom CPFS admin password - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=tasks-cloud-pak-foundational-services
 
-TODO connect to Authoring https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=services-optional-customizing-workflow-server-connect-workflow-authoring
+Connect to Authoring  
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=services-optional-customizing-workflow-server-connect-workflow-authoring  
+The exchange needs to happen periodically based on the validity of the certificates.
+
+```bash
+
+# Workaround the limitation of Server address length in BAS DB - this is not a supported procedure (TODO)
+oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
+'psql postgresql://devbas:Password@localhost:5432/devbas '\
+'-c "ALTER TABLE lsw_server ALTER COLUMN address TYPE varchar(259);"'
+
+# Get Zen CA from dev environment
+oc get secret iaf-system-automationui-aui-zen-ca -n cp4ba-dev \
+-o template --template='{{ index .data "tls.crt" }}' \
+| base64 --decode > /usr/install/zenRootCAdev.cert
+
+# Create secret on Test with Zen CA from Dev
+oc create secret generic baw-tls-zen-secret -n cp4ba-test \
+--from-file=tls.crt=/usr/install/zenRootCAdev.cert
+
+# Get Zen CA from test environment
+oc get secret iaf-system-automationui-aui-zen-ca -n cp4ba-test \
+-o template --template='{{ index .data "tls.crt" }}' \
+| base64 --decode > /usr/install/zenRootCAtest.cert
+
+# Get CPFS CA from test environment
+oc get secret cs-ca-certificate-secret -n cp4ba-test \
+-o template --template='{{ index .data "tls.crt" }}' \
+| base64 --decode > /usr/install/csRootCAtest.cert
+
+# Create secret on Dev with Zen CA and CPFS CA from Test
+oc create secret generic bawaut-tls-zen-secret -n cp4ba-dev \
+--from-file=tls.crt=/usr/install/zenRootCAtest.cert
+oc create secret generic bawaut-tls-cs-secret -n cp4ba-dev \
+--from-file=tls.crt=/usr/install/csRootCAtest.cert
+
+# Create secret with Workflow Authoring credentials in Test 
+echo "
+kind: Secret
+apiVersion: v1
+metadata:
+  name: ibm-baw-wc-secret
+  namespace: cp4ba-test
+type: Opaque
+stringData:
+  username: cpadmin
+  password: Password
+" | oc apply -f -
+
+
+# Configure Workflow Runtime to trust Workflow Authoring TLS
+yq -i '.spec.baw_configuration[0].tls = {"tls_trust_list": ["baw-tls-zen-secret"]}' \
+/usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+
+# Get apps endpoint of your openshift
+apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-dev -o jsonpath='{.spec.domain}'`
+echo $apps_endpoint
+
+# Configure Workflow Runtime to be able to connect to Workflow Authoring
+yq -i '.spec.baw_configuration[0].workflow_center = '\
+'{"url": "https://cpd-cp4ba-dev.'$apps_endpoint'/bas/ProcessCenter", '\
+'"secret_name": "ibm-baw-wc-secret", "heartbeat_interval": 30}' \
+/usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+
+# Configure Workflow Runtime to trust Workflow Authoring URLs
+yq -i '.spec.baw_configuration[0].environment_config = '\
+'{"csrf":{"origin_whitelist":"https://cpd-cp4ba-dev.'$apps_endpoint','\
+'https://cpd-cp4ba-dev.'$apps_endpoint':443,https://cp-console.'$apps_endpoint','\
+'https://cp-console.'$apps_endpoint':443","referer_whitelist": "cpd-cp4ba-dev.'$apps_endpoint','\
+'cpd-cp4ba-dev.'$apps_endpoint':443,cp-console-cp4ba-dev.'$apps_endpoint','\
+'cp-console-cp4ba-dev.'$apps_endpoint':443"}}' \
+/usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+
+# Configure Workflow Authoring to trust Workflow Runtime TLS
+yq -i '.spec.workflow_authoring_configuration.tls = {"tls_trust_list": ["bawaut-tls-zen-secret", "bawaut-tls-cs-secret"]}' \
+/usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+
+# Get apps endpoint of your openshift
+apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-test -o jsonpath='{.spec.domain}'`
+echo $apps_endpoint
+
+# Configure Workflow Authoring to trust Workflow Runtime URLs
+yq -i '.spec.workflow_authoring_configuration.environment_config = '\
+'{"csrf":{"origin_whitelist":"https://cpd-cp4ba-test.'$apps_endpoint','\
+'https://cpd-cp4ba-test.'$apps_endpoint':443,https://cp-console.'$apps_endpoint','\
+'https://cp-console.'$apps_endpoint':443","referer_whitelist": "cpd-cp4ba-test.'$apps_endpoint','\
+'cpd-cp4ba-test.'$apps_endpoint':443,cp-console-cp4ba-test.'$apps_endpoint','\
+'cp-console-cp4ba-test.'$apps_endpoint':443"}}' \
+/usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+
+# Apply updated cp4ba-dev CR
+oc apply -n cp4ba-dev -f /usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+
+# Apply updated cp4ba-test CR
+oc apply -n cp4ba-test -f /usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+```
 
 ## Contacts
 
 Jan Dusek  
 jdusek@cz.ibm.com  
-Business Automation Technical Specialist  
+Business Automation Partner Technical Specialist  
 IBM Czech Republic
 
 ## Notice
