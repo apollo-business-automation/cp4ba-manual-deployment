@@ -670,14 +670,18 @@ Get operand config
 oc get OperandConfig common-service -o yaml -n cp4ba-dev > /usr/install/operand-config-dev.yaml
 ```
 
-Change mongodb storage class.
+Change mongodb storage class
 ```bash
-yq -i '(.spec.services[] | select(.name == "ibm-mongodb-operator") | .spec.mongoDB.storageClass)  = "ocs-storagecluster-cephfs"' /usr/install/operand-config-dev.yaml
+yq -i '(.spec.services[] | select(.name == "ibm-mongodb-operator") '\
+'| .spec.mongoDB.storageClass)  = "ocs-storagecluster-cephfs"' \
+/usr/install/operand-config-dev.yaml
 ```
 
 Username of the default CPFS admin
 ```bash
-yq -i '(.spec.services[] | select(.name == "ibm-iam-operator") | .spec.authentication.config.defaultAdminUser)  = "cpfsadmin"' /usr/install/operand-config-dev.yaml
+yq -i '(.spec.services[] | select(.name == "ibm-iam-operator") '\
+'| .spec.authentication.config.defaultAdminUser)  = "cpfsadmin"' \
+/usr/install/operand-config-dev.yaml
 ```
 
 Apply updated operand config
@@ -814,7 +818,8 @@ cp /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4
 
 # Update generated file with real values
 sed -i \
--e 's/postgresql.DATABASE_SERVERNAME="<Required>"/postgresql.DATABASE_SERVERNAME="postgresql.cp4ba-postgresql.svc.cluster.local"/g' \
+-e 's/postgresql.DATABASE_SERVERNAME="<Required>"'\
+'/postgresql.DATABASE_SERVERNAME="postgresql.cp4ba-postgresql.svc.cluster.local"/g' \
 -e 's/postgresql.DATABASE_PORT="<Required>"/postgresql.DATABASE_PORT="5432"/g' \
 -e 's/postgresql.DATABASE_SSL_ENABLE="True"/postgresql.DATABASE_SSL_ENABLE="False"/g' \
 -e 's/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="True"/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="False"/g' \
@@ -836,7 +841,8 @@ sed -i \
 -e 's/postgresql.OS1_DB_USER_PASSWORD="<yourpassword>"/postgresql.OS1_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOCS_DB_NAME="BAWDOCS"/postgresql.BAWDOCS_DB_NAME="DEVBAWDOCS"/g' \
 -e 's/postgresql.BAWDOCS_DB_USER_NAME="<youruser1>"/postgresql.BAWDOCS_DB_USER_NAME="devbawdocs"/g' \
--e 's/postgresql.BAWDOCS_DB_USER_PASSWORD="<yourpassword>"/postgresql.BAWDOCS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.BAWDOCS_DB_USER_PASSWORD="<yourpassword>"/'\
+'postgresql.BAWDOCS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOS_DB_NAME="BAWDOS"/postgresql.BAWDOS_DB_NAME="DEVBAWDOS"/g' \
 -e 's/postgresql.BAWDOS_DB_USER_NAME="<youruser1>"/postgresql.BAWDOS_DB_USER_NAME="devbawdos"/g' \
 -e 's/postgresql.BAWDOS_DB_USER_PASSWORD="<yourpassword>"/postgresql.BAWDOS_DB_USER_PASSWORD="Password"/g' \
@@ -874,10 +880,14 @@ sed -i \
 -e 's/LDAP_GROUP_BASE_DN="<Required>"/LDAP_GROUP_BASE_DN="ou=Groups,dc=cp,dc=internal"/g' \
 -e 's/LDAP_GROUP_NAME_ATTRIBUTE="<Required>"/LDAP_GROUP_NAME_ATTRIBUTE="*:cn"/g' \
 -e 's/LDAP_GROUP_DISPLAY_NAME_ATTR="<Required>"/LDAP_GROUP_DISPLAY_NAME_ATTR="cn"/g' \
--e 's/LDAP_GROUP_MEMBERSHIP_SEARCH_FILTER="<Required>"/LDAP_GROUP_MEMBERSHIP_SEARCH_FILTER="(|(\&(objectclass=groupOfNames)(member={0}))(\&(objectclass=groupofuniquenames)(uniquemember={0})))"/g' \
+-e 's/LDAP_GROUP_MEMBERSHIP_SEARCH_FILTER="<Required>"/'\
+'LDAP_GROUP_MEMBERSHIP_SEARCH_FILTER="'\
+'(|(\&(objectclass=groupOfNames)(member={0}))(\&(objectclass=groupofuniquenames)(uniquemember={0})))"/g' \
 -e 's/LDAP_GROUP_MEMBER_ID_MAP="<Required>"/LDAP_GROUP_MEMBER_ID_MAP="groupOfNames:member"/g' \
 -e 's/LC_USER_FILTER="<Required>"/LC_USER_FILTER="(\&(uid=%v)(objectclass=inetOrgPerson))"/g' \
--e 's/LC_GROUP_FILTER="<Required>"/LC_GROUP_FILTER="(\&(cn=%v)(|(objectclass=groupOfNames)(objectclass=groupofuniquenames)(objectclass=groupofurls)))"/g' \
+-e 's/LC_GROUP_FILTER="<Required>"/'\
+'LC_GROUP_FILTER="'\
+'(\&(cn=%v)(|(objectclass=groupOfNames)(objectclass=groupofuniquenames)(objectclass=groupofurls)))"/g' \
 /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property
 ```
 
@@ -895,13 +905,20 @@ sed -i \
 -e 's/CONTENT.APPLOGIN_PASSWORD="<Required>"/CONTENT.APPLOGIN_PASSWORD="Password"/g' \
 -e 's/CONTENT.LTPA_PASSWORD="<Required>"/CONTENT.LTPA_PASSWORD="Password"/g' \
 -e 's/CONTENT.KEYSTORE_PASSWORD="<Required>"/CONTENT.KEYSTORE_PASSWORD="Password"/g' \
--e 's/CONTENT_INITIALIZATION.LDAP_ADMIN_USER_NAME="<Required>"/CONTENT_INITIALIZATION.LDAP_ADMIN_USER_NAME="cpadmin"/g' \
--e 's/CONTENT_INITIALIZATION.LDAP_ADMINS_GROUPS_NAME="<Required>"/CONTENT_INITIALIZATION.LDAP_ADMINS_GROUPS_NAME="cpadmins"/g' \
--e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_ADMIN_USER_GROUPS="<Required>"/CONTENT_INITIALIZATION.CPE_OBJ_STORE_ADMIN_USER_GROUPS="cpadmin,cpadmins"/g' \
--e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_DATA_TBL_SPACE="bawtos_tbs"/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_DATA_TBL_SPACE="devbawtos_tbs"/g' \
--e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_ADMIN_GROUP="<Required>"/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_ADMIN_GROUP="cpadmins"/g' \
--e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_CONFIG_GROUP="<Required>"/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_CONFIG_GROUP="cpadmins"/g' \
--e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_PE_CONN_POINT_NAME="<Required>"/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_PE_CONN_POINT_NAME="pe_conn_bawtos"/g' \
+-e 's/CONTENT_INITIALIZATION.LDAP_ADMIN_USER_NAME="<Required>"/'\
+'CONTENT_INITIALIZATION.LDAP_ADMIN_USER_NAME="cpadmin"/g' \
+-e 's/CONTENT_INITIALIZATION.LDAP_ADMINS_GROUPS_NAME="<Required>"/'\
+'CONTENT_INITIALIZATION.LDAP_ADMINS_GROUPS_NAME="cpadmins"/g' \
+-e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_ADMIN_USER_GROUPS="<Required>"/'\
+'CONTENT_INITIALIZATION.CPE_OBJ_STORE_ADMIN_USER_GROUPS="cpadmin,cpadmins"/g' \
+-e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_DATA_TBL_SPACE="bawtos_tbs"/'\
+'CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_DATA_TBL_SPACE="devbawtos_tbs"/g' \
+-e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_ADMIN_GROUP="<Required>"/'\
+'CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_ADMIN_GROUP="cpadmins"/g' \
+-e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_CONFIG_GROUP="<Required>"/'\
+'CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_CONFIG_GROUP="cpadmins"/g' \
+-e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_PE_CONN_POINT_NAME="<Required>"/'\
+'CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_PE_CONN_POINT_NAME="pe_conn_bawtos"/g' \
 -e 's/BAN.APPLOGIN_USER="<Required>"/BAN.APPLOGIN_USER="cpadmin"/g' \
 -e 's/BAN.APPLOGIN_PASSWORD="<Required>"/BAN.APPLOGIN_PASSWORD="Password"/g' \
 -e 's/BAN.LTPA_PASSWORD="<Required>"/BAN.LTPA_PASSWORD="Password"/g' \
@@ -1149,22 +1166,27 @@ You need to setup permissions for your users.
 Before that you need to add cpfsadmin user to Zen to be able to follow step 3 in the Docs. (TODO remove when done automatically by Zen)
 ```bash
 # Get password of zen initial admin
-zen_admin_password=`oc get secret admin-user-details -n cp4ba-dev -o jsonpath='{.data.initial_admin_password}' | base64 -d`
+zen_admin_password=`oc get secret admin-user-details -n cp4ba-dev \
+-o jsonpath='{.data.initial_admin_password}' | base64 -d`
 echo $zen_admin_password
 
 # Get apps endpoint of your openshift
-apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-dev -o jsonpath='{.spec.domain}'`
+apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-dev \
+-o jsonpath='{.spec.domain}'`
 echo $apps_endpoint
 
 # Get zen token
 # Based on https://cloud.ibm.com/apidocs/cloud-pak-data/cloud-pak-data-4.5.0#getauthorizationtoken
-zen_token=`curl --silent -k -H "Content-Type: application/json" -d '{"username":"admin","password":"'$zen_admin_password'"}' \
+zen_token=`curl --silent -k -H "Content-Type: application/json" \
+-d '{"username":"admin","password":"'$zen_admin_password'"}' \
 https://cpd-cp4ba-dev.${apps_endpoint}/icp4d-api/v1/authorize | jq -r ".token"`
 echo $zen_token
 
 # Add cpfsadmin user to zen as administrator
 curl -kv -H "Content-Type: application/json" -H "Authorization: Bearer $zen_token" \
--d '{"username":"cpfsadmin","displayName":"cpfsadmin", "user_roles":["zen_administrator_role","iaf-automation-admin","iaf-automation-analyst","iaf-automation-developer","iaf-automation-operator","zen_user_role"]}' \
+-d '{"username":"cpfsadmin","displayName":"cpfsadmin", '\
+'"user_roles":["zen_administrator_role","iaf-automation-admin","iaf-automation-analyst",'\
+'"iaf-automation-developer","iaf-automation-operator","zen_user_role"]}' \
 https://cpd-cp4ba-dev.${apps_endpoint}/usermgmt/v1/user
 
 # To get cpfsadmin password
@@ -1306,14 +1328,18 @@ Get operand config
 oc get OperandConfig common-service -o yaml -n cp4ba-test > /usr/install/operand-config-test.yaml
 ```
 
-Change mongodb storage class.
+Change mongodb storage class
 ```bash
-yq -i '(.spec.services[] | select(.name == "ibm-mongodb-operator") | .spec.mongoDB.storageClass)  = "ocs-storagecluster-cephfs"' /usr/install/operand-config-test.yaml
+yq -i '(.spec.services[] | select(.name == "ibm-mongodb-operator") '\
+'| .spec.mongoDB.storageClass)  = "ocs-storagecluster-cephfs"' \
+/usr/install/operand-config-test.yaml
 ```
 
 Username of the default CPFS admin
 ```bash
-yq -i '(.spec.services[] | select(.name == "ibm-iam-operator") | .spec.authentication.config.defaultAdminUser)  = "cpfsadmin"' /usr/install/operand-config-test.yaml
+yq -i '(.spec.services[] | select(.name == "ibm-iam-operator") '\
+'| .spec.authentication.config.defaultAdminUser)  = "cpfsadmin"' \
+/usr/install/operand-config-test.yaml
 ```
 
 Apply updated operand config
@@ -1446,11 +1472,13 @@ Update values for cp4ba_db_server.property
 
 ```bash
 # Backup generated file
-cp /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property.bak
+cp /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property \
+/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property.bak
 
 # Update generated file with real values
 sed -i \
--e 's/postgresql.DATABASE_SERVERNAME="<Required>"/postgresql.DATABASE_SERVERNAME="postgresql.cp4ba-postgresql.svc.cluster.local"/g' \
+-e 's/postgresql.DATABASE_SERVERNAME="<Required>"/'\
+'postgresql.DATABASE_SERVERNAME="postgresql.cp4ba-postgresql.svc.cluster.local"/g' \
 -e 's/postgresql.DATABASE_PORT="<Required>"/postgresql.DATABASE_PORT="5432"/g' \
 -e 's/postgresql.DATABASE_SSL_ENABLE="True"/postgresql.DATABASE_SSL_ENABLE="False"/g' \
 -e 's/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="True"/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="False"/g' \
@@ -1460,7 +1488,8 @@ sed -i \
 Update values for cp4ba_db_name_user.property
 ```bash
 # Backup generated file
-cp /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
+cp /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property \
+/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -1472,7 +1501,8 @@ sed -i \
 -e 's/postgresql.OS1_DB_USER_PASSWORD="<yourpassword>"/postgresql.OS1_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOCS_DB_NAME="BAWDOCS"/postgresql.BAWDOCS_DB_NAME="TESTBAWDOCS"/g' \
 -e 's/postgresql.BAWDOCS_DB_USER_NAME="<youruser1>"/postgresql.BAWDOCS_DB_USER_NAME="testbawdocs"/g' \
--e 's/postgresql.BAWDOCS_DB_USER_PASSWORD="<yourpassword>"/postgresql.BAWDOCS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.BAWDOCS_DB_USER_PASSWORD="<yourpassword>"/'\
+'postgresql.BAWDOCS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOS_DB_NAME="BAWDOS"/postgresql.BAWDOS_DB_NAME="TESTBAWDOS"/g' \
 -e 's/postgresql.BAWDOS_DB_USER_NAME="<youruser1>"/postgresql.BAWDOS_DB_USER_NAME="testbawdos"/g' \
 -e 's/postgresql.BAWDOS_DB_USER_PASSWORD="<yourpassword>"/postgresql.BAWDOS_DB_USER_PASSWORD="Password"/g' \
@@ -1500,7 +1530,8 @@ sed -i \
 Update values for cp4ba_LDAP.property
 ```bash
 # Backup generated file
-cp /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property.bak
+cp /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property \
+/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -1516,17 +1547,22 @@ sed -i \
 -e 's/LDAP_GROUP_BASE_DN="<Required>"/LDAP_GROUP_BASE_DN="ou=Groups,dc=cp,dc=internal"/g' \
 -e 's/LDAP_GROUP_NAME_ATTRIBUTE="<Required>"/LDAP_GROUP_NAME_ATTRIBUTE="*:cn"/g' \
 -e 's/LDAP_GROUP_DISPLAY_NAME_ATTR="<Required>"/LDAP_GROUP_DISPLAY_NAME_ATTR="cn"/g' \
--e 's/LDAP_GROUP_MEMBERSHIP_SEARCH_FILTER="<Required>"/LDAP_GROUP_MEMBERSHIP_SEARCH_FILTER="(|(\&(objectclass=groupOfNames)(member={0}))(\&(objectclass=groupofuniquenames)(uniquemember={0})))"/g' \
+-e 's/LDAP_GROUP_MEMBERSHIP_SEARCH_FILTER="<Required>"/'\
+'LDAP_GROUP_MEMBERSHIP_SEARCH_FILTER="'\
+'(|(\&(objectclass=groupOfNames)(member={0}))(\&(objectclass=groupofuniquenames)(uniquemember={0})))"/g' \
 -e 's/LDAP_GROUP_MEMBER_ID_MAP="<Required>"/LDAP_GROUP_MEMBER_ID_MAP="groupOfNames:member"/g' \
 -e 's/LC_USER_FILTER="<Required>"/LC_USER_FILTER="(\&(uid=%v)(objectclass=inetOrgPerson))"/g' \
--e 's/LC_GROUP_FILTER="<Required>"/LC_GROUP_FILTER="(\&(cn=%v)(|(objectclass=groupOfNames)(objectclass=groupofuniquenames)(objectclass=groupofurls)))"/g' \
+-e 's/LC_GROUP_FILTER="<Required>"/'\
+'LC_GROUP_FILTER="'\
+'(\&(cn=%v)(|(objectclass=groupOfNames)(objectclass=groupofuniquenames)(objectclass=groupofurls)))"/g' \
 /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property
 ```
 
 Update values for cp4ba_user_profile.property
 ```bash
 # Backup generated file
-cp /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property.bak
+cp /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property \
+/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -1537,13 +1573,20 @@ sed -i \
 -e 's/CONTENT.APPLOGIN_PASSWORD="<Required>"/CONTENT.APPLOGIN_PASSWORD="Password"/g' \
 -e 's/CONTENT.LTPA_PASSWORD="<Required>"/CONTENT.LTPA_PASSWORD="Password"/g' \
 -e 's/CONTENT.KEYSTORE_PASSWORD="<Required>"/CONTENT.KEYSTORE_PASSWORD="Password"/g' \
--e 's/CONTENT_INITIALIZATION.LDAP_ADMIN_USER_NAME="<Required>"/CONTENT_INITIALIZATION.LDAP_ADMIN_USER_NAME="cpadmin"/g' \
--e 's/CONTENT_INITIALIZATION.LDAP_ADMINS_GROUPS_NAME="<Required>"/CONTENT_INITIALIZATION.LDAP_ADMINS_GROUPS_NAME="cpadmins"/g' \
--e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_ADMIN_USER_GROUPS="<Required>"/CONTENT_INITIALIZATION.CPE_OBJ_STORE_ADMIN_USER_GROUPS="cpadmin,cpadmins"/g' \
--e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_DATA_TBL_SPACE="bawtos_tbs"/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_DATA_TBL_SPACE="testbawtos_tbs"/g' \
--e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_ADMIN_GROUP="<Required>"/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_ADMIN_GROUP="cpadmins"/g' \
--e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_CONFIG_GROUP="<Required>"/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_CONFIG_GROUP="cpadmins"/g' \
--e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_PE_CONN_POINT_NAME="<Required>"/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_PE_CONN_POINT_NAME="pe_conn_bawtos"/g' \
+-e 's/CONTENT_INITIALIZATION.LDAP_ADMIN_USER_NAME="<Required>"/'\
+'CONTENT_INITIALIZATION.LDAP_ADMIN_USER_NAME="cpadmin"/g' \
+-e 's/CONTENT_INITIALIZATION.LDAP_ADMINS_GROUPS_NAME="<Required>"/'\
+'CONTENT_INITIALIZATION.LDAP_ADMINS_GROUPS_NAME="cpadmins"/g' \
+-e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_ADMIN_USER_GROUPS="<Required>"/'\
+'CONTENT_INITIALIZATION.CPE_OBJ_STORE_ADMIN_USER_GROUPS="cpadmin,cpadmins"/g' \
+-e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_DATA_TBL_SPACE="bawtos_tbs"/'\
+'CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_DATA_TBL_SPACE="testbawtos_tbs"/g' \
+-e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_ADMIN_GROUP="<Required>"/'\
+'CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_ADMIN_GROUP="cpadmins"/g' \
+-e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_CONFIG_GROUP="<Required>"/'\
+'CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_CONFIG_GROUP="cpadmins"/g' \
+-e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_PE_CONN_POINT_NAME="<Required>"/'\
+'CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_PE_CONN_POINT_NAME="pe_conn_bawtos"/g' \
 -e 's/BAN.APPLOGIN_USER="<Required>"/BAN.APPLOGIN_USER="cpadmin"/g' \
 -e 's/BAN.APPLOGIN_PASSWORD="<Required>"/BAN.APPLOGIN_PASSWORD="Password"/g' \
 -e 's/BAN.LTPA_PASSWORD="<Required>"/BAN.LTPA_PASSWORD="Password"/g' \
@@ -1810,21 +1853,27 @@ You need to setup permissions for your users.
 Before that you need to add cpfsadmin user to Zen to be able to follow step 3 in the Docs.
 ```bash
 # Get password of zen initial admin
-zen_admin_password=`oc get secret admin-user-details -n cp4ba-test -o jsonpath='{.data.initial_admin_password}' | base64 -d`
+zen_admin_password=`oc get secret admin-user-details -n cp4ba-test \
+-o jsonpath='{.data.initial_admin_password}' | base64 -d`
 echo $zen_admin_password
 
 # Get apps endpoint of your openshift
-apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-test -o jsonpath='{.spec.domain}'`
+apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-test \
+-o jsonpath='{.spec.domain}'`
 echo $apps_endpoint
 
 # Get zen token
-zen_token=`curl --silent -k -H "Content-Type: application/json" -d '{"username":"admin","password":"'$zen_admin_password'"}' \
+# Based on https://cloud.ibm.com/apidocs/cloud-pak-data/cloud-pak-data-4.5.0#getauthorizationtoken
+zen_token=`curl --silent -k -H "Content-Type: application/json" \
+-d '{"username":"admin","password":"'$zen_admin_password'"}' \
 https://cpd-cp4ba-test.${apps_endpoint}/icp4d-api/v1/authorize | jq -r ".token"`
 echo $zen_token
 
 # Add cpfsadmin user to zen as administrator
 curl -kv -H "Content-Type: application/json" -H "Authorization: Bearer $zen_token" \
--d '{"username":"cpfsadmin","displayName":"cpfsadmin", "user_roles":["zen_administrator_role","iaf-automation-admin","iaf-automation-analyst","iaf-automation-developer","iaf-automation-operator","zen_user_role"]}' \
+-d '{"username":"cpfsadmin","displayName":"cpfsadmin", '\
+'"user_roles":["zen_administrator_role","iaf-automation-admin","iaf-automation-analyst",'\
+'"iaf-automation-developer","iaf-automation-operator","zen_user_role"]}' \
 https://cpd-cp4ba-test.${apps_endpoint}/usermgmt/v1/user
 
 # To get cpfsadmin password
