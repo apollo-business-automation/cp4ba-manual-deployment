@@ -814,7 +814,8 @@ Update values for cp4ba_db_server.property
 
 ```bash
 # Backup generated file
-cp /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property.bak
+cp /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property \
+/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -829,7 +830,8 @@ sed -i \
 Update values for cp4ba_db_name_user.property
 ```bash
 # Backup generated file
-cp /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
+cp /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property \
+/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -864,7 +866,8 @@ sed -i \
 Update values for cp4ba_LDAP.property
 ```bash
 # Backup generated file
-cp /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property.bak
+cp /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property \
+/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -894,7 +897,8 @@ sed -i \
 Update values for cp4ba_user_profile.property
 ```bash
 # Backup generated file
-cp /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property.bak
+cp /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property \
+/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -1520,10 +1524,12 @@ sed -i \
 -e 's/postgresql.ICN_DB_USER_PASSWORD="<yourpassword>"/postgresql.ICN_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.APP_ENGINE_DB_NAME="AAEDB"/postgresql.APP_ENGINE_DB_NAME="TESTAAE"/g' \
 -e 's/postgresql.APP_ENGINE_DB_USER_NAME="<youruser1>"/postgresql.APP_ENGINE_DB_USER_NAME="testaae"/g' \
--e 's/postgresql.APP_ENGINE_DB_USER_PASSWORD="<yourpassword>"/postgresql.APP_ENGINE_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.APP_ENGINE_DB_USER_PASSWORD="<yourpassword>"/'\
+'postgresql.APP_ENGINE_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAW_RUNTIME_DB_NAME="BAWDB"/postgresql.BAW_RUNTIME_DB_NAME="TESTBAW"/g' \
 -e 's/postgresql.BAW_RUNTIME_DB_USER_NAME="<youruser1>"/postgresql.BAW_RUNTIME_DB_USER_NAME="testbaw"/g' \
--e 's/postgresql.BAW_RUNTIME_DB_USER_PASSWORD="<yourpassword>"/postgresql.BAW_RUNTIME_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.BAW_RUNTIME_DB_USER_PASSWORD="<yourpassword>"/'\
+'postgresql.BAW_RUNTIME_DB_USER_PASSWORD="Password"/g' \
 /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
 ```
 
@@ -1814,7 +1820,8 @@ sed -i \
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=parameters-business-automation-workflow-runtime-workstream-services  
 Set env type to Test
 ```bash
-yq -i '.spec.baw_configuration[0].env_type = "Test"' /usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+yq -i '.spec.baw_configuration[0].env_type = "Test"' \
+/usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
 Apply CR  
@@ -1962,7 +1969,8 @@ yq -i '.spec.baw_configuration[0].environment_config = '\
 /usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 
 # Configure Workflow Authoring to trust Workflow Runtime TLS
-yq -i '.spec.workflow_authoring_configuration.tls = {"tls_trust_list": ["bawaut-tls-zen-secret", "bawaut-tls-cs-secret"]}' \
+yq -i '.spec.workflow_authoring_configuration.tls = {"tls_trust_list": '\
+'["bawaut-tls-zen-secret", "bawaut-tls-cs-secret"]}' \
 /usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 
 # Get apps endpoint of your openshift
