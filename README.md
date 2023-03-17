@@ -1,6 +1,6 @@
 # Cloud Pak for Business Automation Production deployment manual installation ✍️<!-- omit in toc -->
 
-For version 22.0.2 IF001
+For version 22.0.2 IF002
 
 Installs BAW and FNCM environment.
 
@@ -45,7 +45,7 @@ It is always your responsibility to make sure you are license compliant when usi
 
 Please do not hesitate to create an issue here if needed. Your feedback is appreciated.
 
-Not for production use. Suitable for Demo and PoC environments - but with Production deployment.  
+Not for production use. Suitable for Demo and PoC environments - but with Production deployment.
 
 ## Prerequisites
 
@@ -53,7 +53,7 @@ Not for production use. Suitable for Demo and PoC environments - but with Produc
 - With direct internet connection
 - File RWX StorageClass - in this case ocs-storagecluster-cephfs is used, feel free to find and replace
 - Block RWO StorageClass - in this case ocs-storagecluster-ceph-rbd is used, feel free to find and replace. File Based RWX is also usable but is not supported.
-- cluster admin user
+- Cluster admin user
 - IBM entitlement key from https://myibm.ibm.com/products-services/containerlibrary
 
 ## Needed tooling
@@ -76,6 +76,8 @@ kind: Project
 apiVersion: project.openshift.io/v1
 metadata:
   name: cp4ba-install
+  labels:
+    app: cp4ba-install
 ```
 
 Create PVC where all files used for installation would be kept if you would need to re-instantiate the install Pod.
@@ -85,6 +87,8 @@ apiVersion: v1
 metadata:
   name: install
   namespace: cp4ba-install
+  labels:
+    app: cp4ba-install
 spec:
   accessModes:
     - ReadWriteMany
@@ -95,6 +99,28 @@ spec:
   volumeMode: Filesystem
 ```
 
+Assign cluster admin permissions to *cp4ba-install* default ServiceAccount under which the installation is performed by applying the following yaml.
+
+This requires the logged in OpenShift user to be cluster admin.
+
+The ServiceAccount needs to have cluster admin to be able to create all resources needed to deploy the platform.
+```yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cluster-admin-cp4ba-install
+  labels:
+    app: cp4ba-install
+subjects:
+  - kind: User
+    apiGroup: rbac.authorization.k8s.io
+    name: "system:serviceaccount:cp4ba-install:default"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+```
+
 Create a pod from which the install will be performed with the following definition.  
 It is ready when the message *Install pod - Ready* is in its Log.
 ```yaml
@@ -103,6 +129,8 @@ apiVersion: v1
 metadata:
   name: install
   namespace: cp4ba-install
+  labels:
+    app: cp4ba-install
 spec:
   containers:
     - name: install
@@ -159,17 +187,11 @@ spec:
 
 This needs to be done if you don't perform this in one go and you come back to resume.
 
-Open Terminal window of the newly created pod.
+Open Terminal window of the *install* pod.
 
 Enter bash.
 ```
 bash
-```
-
-Login with your OC user using your own token and server address.
-```bash
-oc login --token=sha256~kwZnxyz1Uekt-IWQJKsXmvabca4LAJtpiBlFiMEPLZ_U \
---server=https://c108-e.eu-gb.containers.cloud.ibm.com:31624
 ```
 
 ## Prerequisite software
@@ -182,23 +204,56 @@ Please note that OpenLDAP is working but is not officially supported by CP4BA.
 
 ### OpenLDAP
 
-Add helm repository for OpenLDAP
+Create cp4ba-openldap Project
 ```bash
-helm repo add helm-openldap https://jp-gouin.github.io/helm-openldap/
+echo "
+kind: Project
+apiVersion: project.openshift.io/v1
+metadata:
+  name: cp4ba-openldap
+  labels:
+    app: cp4ba-openldap
+" | oc apply -f -
 ```
 
-Create openldap-values.yaml file which defines the whole deployment.
-```bash 
-cat <<EOF > /usr/install/openldap-values.yaml
-replicaCount: 1
-env:
-  LDAP_ORGANISATION: "cp.internal"
-  LDAP_DOMAIN: "cp.internal"
-global:  
-  adminPassword: 'Password'
-  configPassword: 'Password'
-customLdifFiles:
+Create ConfigMap for env
+```bash
+echo "
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: openldap-env
+  namespace: cp4ba-openldap
+  labels:
+    app: cp4ba-openldap
+data:
+  BITNAMI_DEBUG: 'true'
+  LDAP_ORGANISATION: cp.internal
+  LDAP_ROOT: 'dc=cp,dc=internal'
+  LDAP_DOMAIN: cp.internal
+" | oc apply -f -
+```
+
+Create ConfigMap for users and groups
+```bash
+echo "
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: openldap-customldif
+  namespace: cp4ba-openldap
+  labels:
+    app: cp4ba-openldap
+data:
   01-default-users.ldif: |-
+    # cp.internal
+    dn: dc=cp,dc=internal
+    objectClass: top
+    objectClass: dcObject
+    objectClass: organization
+    o: cp.internal
+    dc: cp
+
     # Units
     dn: ou=Users,dc=cp,dc=internal
     objectClass: organizationalUnit
@@ -241,100 +296,156 @@ customLdifFiles:
     cn: cpusers
     member: uid=cpadmin,ou=Users,dc=cp,dc=internal
     member: uid=cpuser,ou=Users,dc=cp,dc=internal
-replication:
-  enabled: false
-persistence:
-  enabled: true
+" | oc apply -f -    
+```
+
+Create Secret for password
+```bash
+echo "
+kind: Secret
+apiVersion: v1
+metadata:
+  name: openldap
+  namespace: cp4ba-openldap
+  labels:
+    app: cp4ba-openldap
+stringData:
+  LDAP_ADMIN_PASSWORD: Password
+" | oc apply -f -
+```
+
+Create PVC for data
+```bash
+echo "
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: openldap-data
+  namespace: cp4ba-openldap
+  labels:
+    app: cp4ba-openldap
+spec:
   accessModes:
     - ReadWriteMany
-  size: 8Gi
-  storageClass: "ocs-storagecluster-cephfs"
-livenessProbe:
-  initialDelaySeconds: 60
-readinessProbe:
-  initialDelaySeconds: 60
-resources:
-  requests:
-    cpu: 100m
-    memory: 256Mi
-  limits:
-    cpu: 500m
-    memory: 512Mi
-ltb-passwd:
-  enabled: false
-phpldapadmin:
-  enabled: true
-  ingress:
-    enabled: false
-  env:
-    PHPLDAPADMIN_LDAP_HOSTS: "openldap.cp4ba-openldap.svc.cluster.local"
-
-EOF
-```
-
-Create cp4ba-openldap Project
-```bash
-echo "
-kind: Project
-apiVersion: project.openshift.io/v1
-metadata:
-  name: cp4ba-openldap
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: ocs-storagecluster-cephfs
+  volumeMode: Filesystem
 " | oc apply -f -
 ```
 
-Add required anyuid premission
+Create Deployment
 ```bash
 echo "
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
+kind: Deployment
+apiVersion: apps/v1
 metadata:
-  name: openldap-anyuid
+  name: openldap
   namespace: cp4ba-openldap
-subjects:
-  - kind: ServiceAccount
-    name: default
-    namespace: cp4ba-openldap
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:openshift:scc:anyuid
-" | oc apply -f -
-```
-
-Install OpenLDAP
-```bash
-helm install openldap helm-openldap/openldap-stack-ha \
--f /usr/install/openldap-values.yaml -n cp4ba-openldap --version 3.0.2
-```
-
-Add Route for phpLdapAdmin
-```bash
-echo "
-kind: Route
-apiVersion: route.openshift.io/v1
-metadata:
-  name: phpldapadmin
-  namespace: cp4ba-openldap
+  labels:
+    app: cp4ba-openldap
 spec:
-  to:
-    kind: Service
-    name: openldap-phpldapadmin
-    weight: 100
-  port:
-    targetPort: http
-  tls:
-    termination: edge
-  wildcardPolicy: None
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cp4ba-openldap
+  template:
+    metadata:
+      labels:
+        app: cp4ba-openldap
+    spec:
+      containers:
+        - name: openldap
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          startupProbe:
+            tcpSocket:
+              port: ldap-port
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 30
+          readinessProbe:
+            tcpSocket:
+              port: ldap-port
+            initialDelaySeconds: 60
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 10
+          livenessProbe:
+            tcpSocket:
+              port: ldap-port
+            initialDelaySeconds: 60
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 10
+          terminationMessagePath: /dev/termination-log
+          ports:
+            - name: ldap-port
+              containerPort: 1389
+              protocol: TCP
+          image: 'bitnami/openldap:2.6.4'
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: data
+              mountPath: /bitnami/openldap/
+            - name: custom-ldif-files
+              mountPath: /ldifs/
+          terminationMessagePolicy: File
+          envFrom:
+            - configMapRef:
+                name: openldap-env
+            - secretRef:
+                name: openldap
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: openldap-data
+        - name: custom-ldif-files
+          configMap:
+            name: openldap-customldif
+            defaultMode: 420
 " | oc apply -f -
 ```
 
-Wait for all pods in openldap Project to be Ready 1/1.
+Create Service
+```bash
+echo "
+kind: Service
+apiVersion: v1
+metadata:
+  name: openldap
+  namespace: cp4ba-openldap
+  labels:
+    app: cp4ba-openldap
+spec:
+  ports:
+    - name: ldap-port
+      protocol: TCP
+      port: 389
+      targetPort: ldap-port
+  type: NodePort
+  selector:
+    app: cp4ba-openldap
+" | oc apply -f -
+```
+
+Wait for pod in *cp4ba-openldap* Project to become Ready 1/1.
 
 #### Access info after deployment
 
 OpenLDAP
-- https://phpldapadmin-cp4ba-openldap.<ocp_apps_domain>/
+- See Project cp4ba-openldap, Service openldap for assigned NodePort 
 - cn=admin,dc=cp,dc=internal / Password
+- In OpenLDAP Pod terminal `ldapsearch -x -b "dc=cp,dc=internal" -H ldap://localhost:1389 -D 'cn=admin,dc=cp,dc=internal' -W "objectclass=*"`
 
 ### PostgreSQL
 
@@ -345,10 +456,12 @@ kind: Project
 apiVersion: project.openshift.io/v1
 metadata:
   name: cp4ba-postgresql
+  labels:
+    app: cp4ba-postgresql
 " | oc apply -f -
 ```
 
-Add required privileged premission
+Add required privileged permission
 ```bash
 echo "
 kind: RoleBinding
@@ -356,6 +469,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: postgresql-privileged
   namespace: cp4ba-postgresql
+  labels:
+    app: cp4ba-postgresql
 subjects:
   - kind: ServiceAccount
     name: default
@@ -375,6 +490,8 @@ apiVersion: v1
 metadata:
   name: postgresql-config
   namespace: cp4ba-postgresql
+  labels:
+    app: cp4ba-postgresql
 stringData:
   POSTGRES_DB: postgresdb
   POSTGRES_USER: cpadmin
@@ -390,6 +507,8 @@ apiVersion: v1
 metadata:
   name: postgresql-data
   namespace: cp4ba-postgresql
+  labels:
+    app: cp4ba-postgresql
 spec:
   accessModes:
     - ReadWriteMany
@@ -409,6 +528,8 @@ apiVersion: v1
 metadata:
   name: postgresql-tablespaces
   namespace: cp4ba-postgresql
+  labels:
+    app: cp4ba-postgresql
 spec:
   accessModes:
     - ReadWriteMany
@@ -427,7 +548,9 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: postgresql
-  namespace: cp4ba-postgresql  
+  namespace: cp4ba-postgresql
+  labels:
+    app: cp4ba-postgresql
 spec:
   replicas: 1
   selector:
@@ -482,7 +605,7 @@ spec:
             periodSeconds: 10
           securityContext:
             privileged: true
-          image: postgres:13.9-alpine3.16
+          image: postgres:14.7-alpine3.17
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5432
@@ -513,17 +636,17 @@ metadata:
   name: postgresql
   namespace: cp4ba-postgresql    
   labels:
-    app: postgresql
+    app: cp4ba-postgresql
 spec:
   type: NodePort
   ports:
     - port: 5432
   selector:
-    app: postgresql
+    app: cp4ba-postgresql
 " | oc apply -f -
 ```
 
-Wait for pod in postgresql Project to become Ready 1/1.
+Wait for pod in *cp4ba-postgresql* Project to become Ready 1/1.
 
 #### Access info after deployment
 
@@ -539,11 +662,11 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=d
 ```bash
 # Download the package
 curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
-ibm-cp-automation/4.1.1/ibm-cp-automation-4.1.1.tgz \
---output /usr/install/ibm-cp-automation-4.1.1.tgz
+ibm-cp-automation/4.1.2/ibm-cp-automation-4.1.2.tgz \
+--output /usr/install/ibm-cp-automation-4.1.2.tgz
 
 # Extract the package
-tar xzvf /usr/install/ibm-cp-automation-4.1.1.tgz -C /usr/install
+tar xzvf /usr/install/ibm-cp-automation-4.1.2.tgz -C /usr/install
 ```
 
 ## Cloud Pak for Business Automation Development Environment
@@ -1159,12 +1282,6 @@ Wait for the deployment to be completed. Can be determined by looking in Project
 
 ### Post-installation
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=deployment-recommended-validating-your-production you can further verify the environemnts and get important information.
-```bash
-oc project cp4ba-dev
-/usr/install/cert-kubernetes-dev/scripts/cp4a-post-install.sh --help
-```
-
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=cpbaf-business-automation-studio  
 You need to setup permissions for your users.  
 Before that you need to add cpfsadmin user to Zen to be able to follow step 3 in the Docs. (TODO remove when done automatically by Zen)
@@ -1195,6 +1312,59 @@ https://cpd-cp4ba-dev.${apps_endpoint}/usermgmt/v1/user
 
 # To get cpfsadmin password
 oc get secret platform-auth-idp-credentials -n cp4ba-dev -o jsonpath='{.data.admin_password}' | base64 -d
+```
+
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=deployment-recommended-validating-your-production you can further verify the environemnts and get important information. But before running anything else then --help follow additional steps for script configuration.
+```bash
+oc project cp4ba-dev
+/usr/install/cert-kubernetes-dev/scripts/cp4a-post-install.sh --help
+```
+
+Perform setup for cp4a-post-install.sh script
+```bash
+# Get apps endpoint of your openshift
+apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-dev -o jsonpath='{.spec.domain}'`
+echo $apps_endpoint
+
+# Get CPFS token
+cpfs_token=`curl --silent -k --header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'grant_type=password' \
+--data-urlencode 'username=cpadmin' \
+--data-urlencode 'password=Password' \
+--data-urlencode 'scope=openid' \
+https://cp-console-cp4ba-dev.${apps_endpoint}/idprovider/v1/auth/identitytoken | jq -r ".access_token"`
+echo $cpfs_token
+
+# Exchange CPFS token for Zen token
+zen_token=`curl --silent -k -H "Content-Type: application/json" \
+--header "iam-token: ${cpfs_token}" \
+--header 'username: cpadmin' \
+https://cpd-cp4ba-dev.${apps_endpoint}/v1/preauth/validateAuth | jq -r ".accessToken"`
+echo $zen_token
+
+# Generate ZenApiKey
+zen_api_key=`curl --silent -k -H "Content-Type: application/json" \
+--header "Authorization: Bearer ${zen_token}" \
+--header 'username: cpadmin' \
+https://cpd-cp4ba-dev.${apps_endpoint}/usermgmt/v1/user/apiKey | jq -r ".apiKey"`
+echo $zen_api_key
+
+# Change CPFS namespace for cp4a-post-install.sh script and add password and zen api key
+sed -i \
+-e 's/CP4BA_COMMON_SERVICES_NAMESPACE="ibm-common-services"/'\
+'CP4BA_COMMON_SERVICES_NAMESPACE="cp4ba-dev"/g' \
+-e 's/PROBE_USER_API_KEY=/'\
+'PROBE_USER_API_KEY="'${zen_api_key}'"/g' \
+-e 's/PROBE_USER_NAME=/'\
+'PROBE_USER_NAME="cpadmin"/g' \
+-e 's/PROBE_USER_PASSWORD=/'\
+'PROBE_USER_PASSWORD="Password"/g' \
+/usr/install/cert-kubernetes-dev/scripts/helper/post-install/env.sh
+```
+
+Now you can run cp4a-post-install.sh with other parameters.
+```bash
+# TODO other parameters for endpoints checking
 ```
 
 Follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=deployment-completing-post-installation-tasks as needed.
