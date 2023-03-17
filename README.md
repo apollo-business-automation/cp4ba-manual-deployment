@@ -136,7 +136,7 @@ spec:
     - name: install
       securityContext:
         privileged: true    
-      image: ubi9/ubi:9.0.0
+      image: ubi9/ubi:9.1.0
       command: ["/bin/bash"]
       args:
         ["-c","cd /usr;
@@ -439,6 +439,9 @@ spec:
 ```
 
 Wait for pod in *cp4ba-openldap* Project to become Ready 1/1.
+```bash
+oc get pod -n cp4ba-openldap -w
+```
 
 #### Access info after deployment
 
@@ -647,6 +650,9 @@ spec:
 ```
 
 Wait for pod in *cp4ba-postgresql* Project to become Ready 1/1.
+```bash
+oc get pod -n cp4ba-postgresql -w
+```
 
 #### Access info after deployment
 
@@ -783,6 +789,9 @@ Storage classes are needed to run the deployment script. For the Starter deploym
 Wait until the script finishes.
 
 Wait until all Operators in Project cp4ba-dev are in *Succeeded* state.
+```bash
+oc get csv -n cp4ba-dev -w
+```
 
 ### Customize CPFS before deployment
 
@@ -796,7 +805,7 @@ oc get OperandConfig common-service -o yaml -n cp4ba-dev > /usr/install/operand-
 Change mongodb storage class
 ```bash
 yq -i '(.spec.services[] | select(.name == "ibm-mongodb-operator") '\
-'| .spec.mongoDB.storageClass)  = "ocs-storagecluster-cephfs"' \
+'| .spec.mongoDB.storageClass)  = "ocs-storagecluster-ceph-rbd"' \
 /usr/install/operand-config-dev.yaml
 ```
 
@@ -1066,7 +1075,8 @@ Update GCD create script table space path
 ```bash
 sed -i \
 -e 's|/pgsqldata/gcd|/pgsqldata/devgcd|g' \
-/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/dbscript/fncm/postgresql/postgresql/createGCDDB.sql
+/usr/install/cert-kubernetes-dev/scripts/\
+cp4ba-prerequisites/dbscript/fncm/postgresql/postgresql/createGCDDB.sql
 ```
 
 Copy create scripts to PostgreSQL instance
@@ -1077,13 +1087,6 @@ cp4ba-postgresql/$(oc get pods --namespace cp4ba-postgresql -o name | cut -d"/" 
 
 Execute create scripts with table space directory creation
 ```bash
-# Navigator
-oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/devicn; chown postgres:postgres /pgsqldata/devicn;'
-oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
---file=/usr/dbscript-dev/ban/postgresql/postgresql/createICNDB.sql'
-
 # Studio
 oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
@@ -1116,6 +1119,15 @@ oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
 oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
 --file=/usr/dbscript-dev/fncm/postgresql/postgresql/createDEVCHOS.sql'
+```
+
+```bash
+# Navigator
+oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
+'mkdir /pgsqldata/devicn; chown postgres:postgres /pgsqldata/devicn;'
+oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+--file=/usr/dbscript-dev/ban/postgresql/postgresql/createICNDB.sql'
 
 # FNCM OS1
 oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
@@ -1492,6 +1504,9 @@ Storage classes are needed to run the deployment script. For the Starter deploym
 Wait until the script finishes.
 
 Wait until all Operators in Project cp4ba-test are in *Succeeded* state.
+```bash
+oc get csv -n cp4ba-test -w
+```
 
 ### Customize CPFS before deployment
 
@@ -1505,7 +1520,7 @@ oc get OperandConfig common-service -o yaml -n cp4ba-test > /usr/install/operand
 Change mongodb storage class
 ```bash
 yq -i '(.spec.services[] | select(.name == "ibm-mongodb-operator") '\
-'| .spec.mongoDB.storageClass)  = "ocs-storagecluster-cephfs"' \
+'| .spec.mongoDB.storageClass)  = "ocs-storagecluster-ceph-rbd"' \
 /usr/install/operand-config-test.yaml
 ```
 
@@ -1784,7 +1799,8 @@ Update GCD create script table space path
 ```bash
 sed -i \
 -e 's|/pgsqldata/gcd|/pgsqldata/testgcd|g' \
-/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/dbscript/fncm/postgresql/postgresql/createGCDDB.sql
+/usr/install/cert-kubernetes-test/scripts/\
+cp4ba-prerequisites/dbscript/fncm/postgresql/postgresql/createGCDDB.sql
 ```
 
 Copy create scripts to PostgreSQL instance
@@ -1799,13 +1815,6 @@ Execute create scripts with table space directory creation
 oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
 --file=/usr/dbscript-test/ae/postgresql/postgresql/create_app_engine_db.sql'
-
-# Navigator
-oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/testicn; chown postgres:postgres /pgsqldata/testicn;'
-oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
---file=/usr/dbscript-test/ban/postgresql/postgresql/createICNDB.sql'
 
 # BAW runtime
 oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
@@ -1839,6 +1848,15 @@ oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
 oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
 --file=/usr/dbscript-test/fncm/postgresql/postgresql/createTESTCHOS.sql'
+```
+
+```bash
+# Navigator
+oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
+'mkdir /pgsqldata/testicn; chown postgres:postgres /pgsqldata/testicn;'
+oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
+'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+--file=/usr/dbscript-test/ban/postgresql/postgresql/createICNDB.sql'
 
 # FNCM OS1
 oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
