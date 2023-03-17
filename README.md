@@ -558,11 +558,11 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: postgresql
+      app: cp4ba-postgresql
   template:
     metadata:
       labels:
-        app: postgresql
+        app: cp4ba-postgresql
     spec:
       containers:
         - name: postgresql
@@ -1144,9 +1144,7 @@ oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
 --file=/usr/dbscript-dev/fncm/postgresql/postgresql/createGCDDB.sql'
 ```
 
-Update secrets if needed - There would be ``<Required>`` in some of the yamls under /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/secret_template/.
-
-Apply secrets
+Apply secrets which are in /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/secret_template/.
 ```bash
 # Switch to Project
 oc project cp4ba-dev
@@ -1276,6 +1274,9 @@ oc apply -n cp4ba-dev -f /usr/install/cert-kubernetes-dev/scripts/generated-cr/i
 ```
 
 Wait for the deployment to be completed. Can be determined by looking in Project cp4ba-dev in Kind ICP4ACluster, instance named icp4adeploy to have the following conditions:
+```bash
+oc get icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}" -w
+```
 ```yaml
   conditions:
     - message: Running reconciliation
@@ -1880,9 +1881,7 @@ oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
 --file=/usr/dbscript-test/fncm/postgresql/postgresql/createGCDDB.sql'
 ```
 
-Update secrets if needed - There would be ``<Required>`` in some of the yamls under /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/secret_template/.
-
-Apply secrets
+Apply secrets which are in /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/secret_template/.
 ```bash
 # Switch to Project
 oc project cp4ba-test
@@ -2019,6 +2018,9 @@ oc apply -n cp4ba-test -f /usr/install/cert-kubernetes-test/scripts/generated-cr
 ```
 
 Wait for the deployment to be completed. Can be determined by looking in Project cp4ba-test in Kind ICP4ACluster, instance named icp4adeploy to have the following conditions:
+```bash
+oc get icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}" -w
+```
 ```yaml
   conditions:
     - message: Running reconciliation
