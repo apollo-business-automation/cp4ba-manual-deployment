@@ -1680,7 +1680,8 @@ Update values for cp4ba_db_name_user.property
 # Backup generated file
 cp /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property \
 /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
-
+```
+```bash
 # Update generated file with real values
 sed -i \
 -e 's/postgresql.GCD_DB_NAME="GCDDB"/postgresql.GCD_DB_NAME="TESTGCD"/g' \
