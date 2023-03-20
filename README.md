@@ -2170,7 +2170,8 @@ The exchange needs to happen periodically based on the validity of the certifica
 oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
 'psql postgresql://devbas:Password@localhost:5432/devbas '\
 '-c "ALTER TABLE lsw_server ALTER COLUMN address TYPE varchar(256);"'
-
+```
+```bash
 # Get Zen CA from dev environment
 oc get secret iaf-system-automationui-aui-zen-ca -n cp4ba-dev \
 -o template --template='{{ index .data "tls.crt" }}' \
@@ -2195,7 +2196,8 @@ oc create secret generic bawaut-tls-zen-secret -n cp4ba-dev \
 --from-file=tls.crt=/usr/install/zenRootCAtest.cert
 oc create secret generic bawaut-tls-cs-secret -n cp4ba-dev \
 --from-file=tls.crt=/usr/install/csRootCAtest.cert
-
+```
+```bash
 # Create secret with Workflow Authoring credentials in Test 
 echo "
 kind: Secret
@@ -2208,7 +2210,6 @@ stringData:
   username: cpadmin
   password: Password
 " | oc apply -f -
-
 
 # Configure Workflow Runtime to trust Workflow Authoring TLS
 yq -i '.spec.baw_configuration[0].tls = {"tls_trust_list": ["baw-tls-zen-secret"]}' \
@@ -2232,7 +2233,8 @@ yq -i '.spec.baw_configuration[0].environment_config = '\
 'cpd-cp4ba-dev.'$apps_endpoint':443,cp-console-cp4ba-dev.'$apps_endpoint','\
 'cp-console-cp4ba-dev.'$apps_endpoint':443"}}' \
 /usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-
+```
+```bash
 # Configure Workflow Authoring to trust Workflow Runtime TLS
 yq -i '.spec.workflow_authoring_configuration.tls = {"tls_trust_list": '\
 '["bawaut-tls-zen-secret", "bawaut-tls-cs-secret"]}' \
@@ -2250,7 +2252,8 @@ yq -i '.spec.workflow_authoring_configuration.environment_config = '\
 'cpd-cp4ba-test.'$apps_endpoint':443,cp-console-cp4ba-test.'$apps_endpoint','\
 'cp-console-cp4ba-test.'$apps_endpoint':443"}}' \
 /usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
-
+```
+```bash
 # Apply updated cp4ba-dev CR
 oc apply -n cp4ba-dev -f /usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 
