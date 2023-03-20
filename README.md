@@ -62,7 +62,6 @@ Provided in the install Pod.
 
 - podman
 - openjdk9
-- helm
 - oc
 - kubectl
 - yq
@@ -147,11 +146,6 @@ spec:
           tar -xvf openjdk-9_linux-x64_bin.tar.gz;
           ln -fs /usr/jdk-9/bin/java /usr/bin/java;
           ln -fs /usr/jdk-9/bin/keytool /usr/bin/keytool;
-          curl -O https://get.helm.sh/helm-v3.6.0-linux-amd64.tar.gz;
-          tar -zxvf helm-v3.6.0-linux-amd64.tar.gz linux-amd64/helm;
-          mv linux-amd64/helm helm;
-          chmod u+x helm;
-          ln -fs /usr/helm /usr/bin/helm;
           curl -k https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz --output oc.tar;
           tar -xvf oc.tar oc;
           chmod u+x oc;
@@ -165,7 +159,6 @@ spec:
           podman -v;
           java -version;
           keytool;
-          helm version;
           oc version;
           kubectl version;
           yq --version;
@@ -2259,6 +2252,18 @@ oc apply -n cp4ba-dev -f /usr/install/cert-kubernetes-dev/scripts/generated-cr/i
 
 # Apply updated cp4ba-test CR
 oc apply -n cp4ba-test -f /usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+```
+
+Now you need to wait for next Operator cycle to propagate the changes from CR to BAW pods in both dev and test environment.
+
+Good indicator of the change for cp4ba-test is existence of WORKFLOWCENTER environment parameters for Workflow Server
+```bash
+oc get statefulset icp4adeploy-bawins1-baw-server -n cp4ba-test -o yaml | grep WORKFLOWCENTER
+```
+
+Good indicator of the change for cp4ba-dev is existence of bawaut-tls-zen-secret secret mapping for Workflow Authoring
+```bash
+oc get statefulset icp4adeploy-bastudio-deployment -n cp4ba-dev -o yaml | grep bawaut-tls-zen-secret
 ```
 
 ## Contacts
