@@ -1275,7 +1275,7 @@ oc apply -n cp4ba-dev -f /usr/install/cert-kubernetes-dev/scripts/generated-cr/i
 
 Wait for the deployment to be completed. Can be determined by looking in Project cp4ba-dev in Kind ICP4ACluster, instance named icp4adeploy to have the following conditions:
 ```bash
-oc get icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}" -w
+oc get -n cp4ba-dev icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}" -w
 ```
 ```yaml
   conditions:
@@ -1325,6 +1325,15 @@ https://cpd-cp4ba-dev.${apps_endpoint}/usermgmt/v1/user
 
 # To get cpfsadmin password
 oc get secret platform-auth-idp-credentials -n cp4ba-dev -o jsonpath='{.data.admin_password}' | base64 -d
+```
+
+Also add all roles to cpadmin user to be usable for all tasks.
+```bash
+curl -kv -X PUT -H "Content-Type: application/json" -H "Authorization: Bearer $zen_token" \
+-d '{"username":"cpadmin", '\
+'"user_roles":["zen_administrator_role","iaf-automation-admin","iaf-automation-analyst",'\
+'"iaf-automation-developer","iaf-automation-operator","zen_user_role"]}' \
+https://cpd-cp4ba-dev.${apps_endpoint}/usermgmt/v1/user/cpadmin?add_roles=true
 ```
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=deployment-recommended-validating-your-production you can further verify the environemnts and get important information. But before running anything else then --help follow additional steps for script configuration.
@@ -1377,7 +1386,9 @@ sed -i \
 
 Now you can run cp4a-post-install.sh with other parameters.
 ```bash
-# TODO other parameters for endpoints checking
+/usr/install/cert-kubernetes-dev/scripts/cp4a-post-install.sh --precheck
+/usr/install/cert-kubernetes-dev/scripts/cp4a-post-install.sh --status
+/usr/install/cert-kubernetes-dev/scripts/cp4a-post-install.sh --console
 ```
 
 Follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=deployment-completing-post-installation-tasks as needed.
@@ -2020,7 +2031,7 @@ oc apply -n cp4ba-test -f /usr/install/cert-kubernetes-test/scripts/generated-cr
 
 Wait for the deployment to be completed. Can be determined by looking in Project cp4ba-test in Kind ICP4ACluster, instance named icp4adeploy to have the following conditions:
 ```bash
-oc get icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}" -w
+oc get -n cp4ba-test icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}" -w
 ```
 ```yaml
   conditions:
@@ -2076,6 +2087,70 @@ https://cpd-cp4ba-test.${apps_endpoint}/usermgmt/v1/user
 
 # To get cpfsadmin password
 oc get secret platform-auth-idp-credentials -n cp4ba-test -o jsonpath='{.data.admin_password}' | base64 -d
+```
+
+Also add all roles to cpadmin user to be usable for all tasks.
+```bash
+curl -kv -X PUT -H "Content-Type: application/json" -H "Authorization: Bearer $zen_token" \
+-d '{"username":"cpadmin", '\
+'"user_roles":["zen_administrator_role","iaf-automation-admin","iaf-automation-analyst",'\
+'"iaf-automation-developer","iaf-automation-operator","zen_user_role"]}' \
+https://cpd-cp4ba-test.${apps_endpoint}/usermgmt/v1/user/cpadmin?add_roles=true
+```
+
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=deployment-recommended-validating-your-production you can further verify the environemnts and get important information. But before running anything else then --help follow additional steps for script configuration.
+```bash
+oc project cp4ba-test
+/usr/install/cert-kubernetes-test/scripts/cp4a-post-install.sh --help
+```
+
+Perform setup for cp4a-post-install.sh script
+```bash
+# Get apps endpoint of your openshift
+apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-dev -o jsonpath='{.spec.domain}'`
+echo $apps_endpoint
+
+# Get CPFS token
+cpfs_token=`curl --silent -k --header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'grant_type=password' \
+--data-urlencode 'username=cpadmin' \
+--data-urlencode 'password=Password' \
+--data-urlencode 'scope=openid' \
+https://cp-console-cp4ba-test.${apps_endpoint}/idprovider/v1/auth/identitytoken | jq -r ".access_token"`
+echo $cpfs_token
+
+# Exchange CPFS token for Zen token
+zen_token=`curl --silent -k -H "Content-Type: application/json" \
+--header "iam-token: ${cpfs_token}" \
+--header 'username: cpadmin' \
+https://cpd-cp4ba-test.${apps_endpoint}/v1/preauth/validateAuth | jq -r ".accessToken"`
+echo $zen_token
+
+# Generate ZenApiKey
+zen_api_key=`curl --silent -k -H "Content-Type: application/json" \
+--header "Authorization: Bearer ${zen_token}" \
+--header 'username: cpadmin' \
+https://cpd-cp4ba-test.${apps_endpoint}/usermgmt/v1/user/apiKey | jq -r ".apiKey"`
+echo $zen_api_key
+
+# Change CPFS namespace for cp4a-post-install.sh script and add password and zen api key
+sed -i \
+-e 's/CP4BA_COMMON_SERVICES_NAMESPACE="ibm-common-services"/'\
+'CP4BA_COMMON_SERVICES_NAMESPACE="cp4ba-dev"/g' \
+-e 's/PROBE_USER_API_KEY=/'\
+'PROBE_USER_API_KEY="'${zen_api_key}'"/g' \
+-e 's/PROBE_USER_NAME=/'\
+'PROBE_USER_NAME="cpadmin"/g' \
+-e 's/PROBE_USER_PASSWORD=/'\
+'PROBE_USER_PASSWORD="Password"/g' \
+/usr/install/cert-kubernetes-test/scripts/helper/post-install/env.sh
+```
+
+Now you can run cp4a-post-install.sh with other parameters.
+```bash
+/usr/install/cert-kubernetes-dev/scripts/cp4a-post-install.sh --precheck
+/usr/install/cert-kubernetes-dev/scripts/cp4a-post-install.sh --status
+/usr/install/cert-kubernetes-dev/scripts/cp4a-post-install.sh --console
 ```
 
 Follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=deployment-completing-post-installation-tasks as needed.
