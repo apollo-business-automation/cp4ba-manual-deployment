@@ -788,30 +788,33 @@ oc get csv -n cp4ba-dev -w
 
 ### Customize CPFS before deployment
 
-Based on https://www.ibm.com/docs/en/cpfs?topic=services-configuring-foundational-by-using-custom-resource#sc
+Based on https://www.ibm.com/docs/en/cpfs?topic=services-configuring-foundational-by-using-custom-resource
 
-Get operand config
+Change CPFS size to small
 ```bash
-oc get OperandConfig common-service -o yaml -n cp4ba-dev > /usr/install/operand-config-dev.yaml
+oc patch CommonService common-service --type='merge' -p '{"spec":{"size":"small"}}'
+```
+
+Prepare services configurations
+```bash
+oc patch CommonService common-service --type=json \
+-p '[{"op": "add", "path": "/spec/services", "value":[]}]'
 ```
 
 Change mongodb storage class
 ```bash
-yq -i '(.spec.services[] | select(.name == "ibm-mongodb-operator") '\
-'| .spec.mongoDB.storageClass)  = "ocs-storagecluster-ceph-rbd"' \
-/usr/install/operand-config-dev.yaml
+oc patch CommonService common-service --type=json \
+-p '[{"op": "add", "path": "/spec/services/-",'\
+'"value":{"name":"ibm-mongodb-operator",'\
+'"spec":{"mongoDB": {"storageClass":"ocs-storagecluster-ceph-rbd"}}}}]'
 ```
 
-Username of the default CPFS admin
+Customize username of the default CPFS admin
 ```bash
-yq -i '(.spec.services[] | select(.name == "ibm-iam-operator") '\
-'| .spec.authentication.config.defaultAdminUser)  = "cpfsadmin"' \
-/usr/install/operand-config-dev.yaml
-```
-
-Apply updated operand config
-```bash
-oc apply -f /usr/install/operand-config-dev.yaml
+oc patch CommonService common-service --type=json \
+-p '[{"op": "add", "path": "/spec/services/-",'\
+'"value":{"name":"ibm-iam-operator",'\
+'"spec":{"authentication": {"config":{"defaultAdminUser":"cpfsadmin"}}}}}]}]'
 ```
 
 ### Prepare property files
@@ -1515,30 +1518,33 @@ oc get csv -n cp4ba-test -w
 
 ### Customize CPFS before deployment
 
-Based on https://www.ibm.com/docs/en/cpfs?topic=services-configuring-foundational-by-using-custom-resource#sc
+Based on https://www.ibm.com/docs/en/cpfs?topic=services-configuring-foundational-by-using-custom-resource
 
-Get operand config
+Change CPFS size to small
 ```bash
-oc get OperandConfig common-service -o yaml -n cp4ba-test > /usr/install/operand-config-test.yaml
+oc patch CommonService common-service --type='merge' -p '{"spec":{"size":"small"}}'
+```
+
+Prepare services configurations
+```bash
+oc patch CommonService common-service --type=json \
+-p '[{"op": "add", "path": "/spec/services", "value":[]}]'
 ```
 
 Change mongodb storage class
 ```bash
-yq -i '(.spec.services[] | select(.name == "ibm-mongodb-operator") '\
-'| .spec.mongoDB.storageClass)  = "ocs-storagecluster-ceph-rbd"' \
-/usr/install/operand-config-test.yaml
+oc patch CommonService common-service --type=json \
+-p '[{"op": "add", "path": "/spec/services/-",'\
+'"value":{"name":"ibm-mongodb-operator",'\
+'"spec":{"mongoDB": {"storageClass":"ocs-storagecluster-ceph-rbd"}}}}]'
 ```
 
-Username of the default CPFS admin
+Customize username of the default CPFS admin
 ```bash
-yq -i '(.spec.services[] | select(.name == "ibm-iam-operator") '\
-'| .spec.authentication.config.defaultAdminUser)  = "cpfsadmin"' \
-/usr/install/operand-config-test.yaml
-```
-
-Apply updated operand config
-```bash
-oc apply -f /usr/install/operand-config-test.yaml
+oc patch CommonService common-service --type=json \
+-p '[{"op": "add", "path": "/spec/services/-",'\
+'"value":{"name":"ibm-iam-operator",'\
+'"spec":{"authentication": {"config":{"defaultAdminUser":"cpfsadmin"}}}}}]}]'
 ```
 
 ### Prepare property files
