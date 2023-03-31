@@ -1,6 +1,6 @@
 # Cloud Pak for Business Automation Production deployment manual installation ✍️<!-- omit in toc -->
 
-For version 22.0.2 IF002
+For version 22.0.2 IF003
 
 Installs BAW and FNCM environment.
 
@@ -16,22 +16,22 @@ Installs BAW and FNCM environment.
     - [Access info after deployment](#access-info-after-deployment-1)
 - [Cloud Pak for Business Automation CASE package](#cloud-pak-for-business-automation-case-package)
 - [Cloud Pak for Business Automation Development Environment](#cloud-pak-for-business-automation-development-environment)
-  - [Access info after deployment](#access-info-after-deployment-2)
   - [Get certified kubernetes folder](#get-certified-kubernetes-folder)
   - [Cluster setup](#cluster-setup)
   - [Customize CPFS before deployment](#customize-cpfs-before-deployment)
   - [Prepare property files](#prepare-property-files)
   - [Generate, update and apply SQL and Secret files and validate the connectivity](#generate-update-and-apply-sql-and-secret-files-and-validate-the-connectivity)
   - [Create and deploy CP4BA CR](#create-and-deploy-cp4ba-cr)
+  - [Access info after deployment](#access-info-after-deployment-2)
   - [Post-installation](#post-installation)
 - [Cloud Pak for Business Automation Test Environment](#cloud-pak-for-business-automation-test-environment)
-  - [Access info after deployment](#access-info-after-deployment-3)
   - [Get certified kubernetes folder](#get-certified-kubernetes-folder-1)
   - [Cluster setup](#cluster-setup-1)
   - [Customize CPFS before deployment](#customize-cpfs-before-deployment-1)
   - [Prepare property files](#prepare-property-files-1)
   - [Generate, update and apply SQL and Secret files and validate the connectivity](#generate-update-and-apply-sql-and-secret-files-and-validate-the-connectivity-1)
   - [Create and deploy CP4BA CR](#create-and-deploy-cp4ba-cr-1)
+  - [Access info after deployment](#access-info-after-deployment-3)
   - [Post-installation](#post-installation-1)
 - [Contacts](#contacts)
 - [Notice](#notice)
@@ -49,7 +49,7 @@ Not for production use. Suitable for Demo and PoC environments - but with Produc
 
 ## Prerequisites
 
-- Empty OpenShift cluster
+- Empty OpenShift cluster of a supported version
 - With direct internet connection
 - File RWX StorageClass - in this case ocs-storagecluster-cephfs is used, feel free to find and replace
 - Block RWO StorageClass - in this case ocs-storagecluster-ceph-rbd is used, feel free to find and replace. File Based RWX is also usable but is not supported.
@@ -178,7 +178,7 @@ spec:
 
 ## Command line preparation in install Pod
 
-This needs to be done if you don't perform this in one go and you come back to resume.
+This needs to be repeated if you don't perform this in one go and you come back to resume.
 
 Open Terminal window of the *install* pod.
 
@@ -264,7 +264,7 @@ data:
     sn: cpadmin
     uid: cpadmin
     mail: cpadmin@cp.internal
-    userpassword:: UGFzc3dvcmQ=
+    userpassword: Password
     employeeType: admin
 
     dn: uid=cpuser,ou=Users,dc=cp,dc=internal
@@ -274,7 +274,7 @@ data:
     sn: cpuser
     uid: cpuser
     mail: cpuser@cp.internal
-    userpassword:: UGFzc3dvcmQ=
+    userpassword: Password
 
     # Groups
     dn: cn=cpadmins,ou=Groups,dc=cp,dc=internal
@@ -661,22 +661,16 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=d
 ```bash
 # Download the package
 curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
-ibm-cp-automation/4.1.2/ibm-cp-automation-4.1.2.tgz \
---output /usr/install/ibm-cp-automation-4.1.2.tgz
+ibm-cp-automation/4.1.3/ibm-cp-automation-4.1.3.tgz \
+--output /usr/install/ibm-cp-automation-4.1.3.tgz
 
 # Extract the package
-tar xzvf /usr/install/ibm-cp-automation-4.1.2.tgz -C /usr/install
+tar xzvf /usr/install/ibm-cp-automation-4.1.3.tgz -C /usr/install
 ```
 
 ## Cloud Pak for Business Automation Development Environment
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=deployments-installing-cp4ba-multi-pattern-production-deployment
-
-### Access info after deployment
-
-- https://cpd-cp4ba-dev.<ocp_apps_domain>/
-- cpadmin / Password
-- Additional capabilities based info in Project cp4ba-dev in ConfigMap icp4adeploy-cp4ba-access-info
 
 ### Get certified kubernetes folder
 
@@ -947,8 +941,8 @@ cp /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4
 
 # Update generated file with real values
 sed -i \
--e 's/postgresql.DATABASE_SERVERNAME="<Required>"'\
-'/postgresql.DATABASE_SERVERNAME="postgresql.cp4ba-postgresql.svc.cluster.local"/g' \
+-e 's/postgresql.DATABASE_SERVERNAME="<Required>"/'\
+'postgresql.DATABASE_SERVERNAME="postgresql.cp4ba-postgresql.svc.cluster.local"/g' \
 -e 's/postgresql.DATABASE_PORT="<Required>"/postgresql.DATABASE_PORT="5432"/g' \
 -e 's/postgresql.DATABASE_SSL_ENABLE="True"/postgresql.DATABASE_SSL_ENABLE="False"/g' \
 -e 's/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="True"/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="False"/g' \
@@ -1289,11 +1283,17 @@ oc get -n cp4ba-dev icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}" 
       type: Ready
 ```
 
+### Access info after deployment
+
+- https://cpd-cp4ba-dev.<ocp_apps_domain>/
+- cpadmin / Password
+- Additional capabilities based info in Project cp4ba-dev in ConfigMap icp4adeploy-cp4ba-access-info
+
 ### Post-installation
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=cpbaf-business-automation-studio  
 You need to setup permissions for your users.  
-Before that you need to add cpfsadmin user to Zen to be able to follow step 3 in the Docs. (TODO remove when done automatically by Zen)
+Before that you need to add cpfsadmin user to Zen to be able to follow step 3 in the Docs.
 ```bash
 # Get password of zen initial admin
 zen_admin_password=`oc get secret admin-user-details -n cp4ba-dev \
@@ -1398,12 +1398,6 @@ Custom Zen certificates - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-a
 ## Cloud Pak for Business Automation Test Environment
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=deployments-installing-cp4ba-multi-pattern-production-deployment
-
-### Access info after deployment
-
-- https://cpd-cp4ba-test.<ocp_apps_domain>/
-- cpadmin / Password
-- Additional capabilities based info in Project cp4ba-test in ConfigMap icp4adeploy-cp4ba-access-info
 
 ### Get certified kubernetes folder
 
@@ -2047,6 +2041,12 @@ oc get -n cp4ba-test icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}"
       status: 'True'
       type: Ready
 ```
+
+### Access info after deployment
+
+- https://cpd-cp4ba-test.<ocp_apps_domain>/
+- cpadmin / Password
+- Additional capabilities based info in Project cp4ba-test in ConfigMap icp4adeploy-cp4ba-access-info
 
 ### Post-installation
 
