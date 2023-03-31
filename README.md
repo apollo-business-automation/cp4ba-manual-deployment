@@ -41,7 +41,8 @@ Installs BAW and FNCM environment.
 This is **not** an official IBM documentation.  
 Absolutely no warranties, no support, no responsibility for anything.  
 Use it on your own risk and always follow the official IBM documentations.  
-It is always your responsibility to make sure you are license compliant when using this repository to install IBM Cloud Pak for Business Automation.
+It is always your responsibility to make sure you are license compliant when using this repository to install IBM Cloud Pak for Business Automation.  
+Used OpenLDAP and PostgreSQL cannot run on Restricted OCP from CP4BA.
 
 Please do not hesitate to create an issue here if needed. Your feedback is appreciated.
 
