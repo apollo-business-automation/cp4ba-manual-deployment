@@ -820,6 +820,14 @@ oc patch CommonService common-service --type=json \
 '"spec":{"authentication": {"config":{"defaultAdminUser":"cpfsadmin"}}}}}]}]'
 ```
 
+Based on https://www.ibm.com/docs/en/cpfs?topic=operator-versions-compatibility-foundational-services  
+Clear SecretShare resource sharing not needed for new versions
+```bash
+oc patch SecretShare common-services -n cs-control --type=json \
+-p '[{"op": "replace", "path": "/spec/configmapshares","value":[]},'\
+'{"op": "replace", "path": "/spec/secretshares","value":[]}]'
+```
+
 ### Prepare property files
 
 Generate properties for components that you would like to deploy.
