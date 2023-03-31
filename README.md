@@ -2166,12 +2166,6 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/22.0.2?topic=s
 The exchange needs to happen periodically based on the validity of the certificates.
 
 ```bash
-# Workaround the limitation of Server address length in BAS DB - this is not a supported procedure (TODO)
-oc --namespace cp4ba-postgresql exec deploy/postgresql -- /bin/bash -c \
-'psql postgresql://devbas:Password@localhost:5432/devbas '\
-'-c "ALTER TABLE lsw_server ALTER COLUMN address TYPE varchar(256);"'
-```
-```bash
 # Get Zen CA from dev environment
 oc get secret iaf-system-automationui-aui-zen-ca -n cp4ba-dev \
 -o template --template='{{ index .data "tls.crt" }}' \
