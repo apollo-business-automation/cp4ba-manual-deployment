@@ -817,7 +817,7 @@ Customize username of the default CPFS admin
 oc patch CommonService common-service --type=json \
 -p '[{"op": "add", "path": "/spec/services/-",'\
 '"value":{"name":"ibm-iam-operator",'\
-'"spec":{"authentication": {"config":{"defaultAdminUser":"cpfsadmin"}}}}}]}]'
+'"spec":{"authentication": {"config":{"defaultAdminUser":"cpfsadmin"}}}}}]'
 ```
 
 Based on https://www.ibm.com/docs/en/cpfs?topic=operator-versions-compatibility-foundational-services  
@@ -1555,7 +1555,7 @@ Customize username of the default CPFS admin
 oc patch CommonService common-service --type=json \
 -p '[{"op": "add", "path": "/spec/services/-",'\
 '"value":{"name":"ibm-iam-operator",'\
-'"spec":{"authentication": {"config":{"defaultAdminUser":"cpfsadmin"}}}}}]}]'
+'"spec":{"authentication": {"config":{"defaultAdminUser":"cpfsadmin"}}}}}]'
 ```
 
 ### Prepare property files
