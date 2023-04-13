@@ -549,14 +549,13 @@ spec:
 Create Deployment
 ```bash
 echo "
-kind: Deployment
 apiVersion: apps/v1
+kind: StatefulSet
 metadata:
   name: postgresql
   namespace: cp4ba-postgresql
-  labels:
-    app: cp4ba-postgresql
 spec:
+  serviceName: postgresql
   replicas: 1
   selector:
     matchLabels:
@@ -607,7 +606,7 @@ spec:
                 - -c
                 - exec pg_isready -U \$POSTGRES_USER -d \$POSTGRES_DB
             failureThreshold: 18
-            periodSeconds: 10
+            periodSeconds: 10            
           securityContext:
             privileged: true
           image: postgres:14.7-alpine3.17
