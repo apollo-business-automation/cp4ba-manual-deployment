@@ -2284,7 +2284,7 @@ oc get statefulset icp4adeploy-bastudio-deployment -n cp4ba-dev -o yaml | grep b
 
 ## Contacts
 
-Jan Dusek  
+Jan Dušek  
 jdusek@cz.ibm.com  
 Business Automation Partner Technical Specialist  
 IBM Czech Republic
