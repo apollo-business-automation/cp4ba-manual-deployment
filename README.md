@@ -546,7 +546,7 @@ spec:
 " | oc apply -f -
 ```
 
-Create Deployment
+Create StatefulSet
 ```bash
 echo "
 apiVersion: apps/v1
