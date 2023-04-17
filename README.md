@@ -388,6 +388,14 @@ spec:
               protocol: TCP
           image: 'bitnami/openldap:2.6.4'
           imagePullPolicy: Always
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
           volumeMounts:
             - name: data
               mountPath: /bitnami/openldap/
@@ -541,14 +549,13 @@ spec:
 Create Deployment
 ```bash
 echo "
-kind: Deployment
 apiVersion: apps/v1
+kind: StatefulSet
 metadata:
   name: postgresql
   namespace: cp4ba-postgresql
-  labels:
-    app: cp4ba-postgresql
 spec:
+  serviceName: postgresql
   replicas: 1
   selector:
     matchLabels:
@@ -599,7 +606,7 @@ spec:
                 - -c
                 - exec pg_isready -U \$POSTGRES_USER -d \$POSTGRES_DB
             failureThreshold: 18
-            periodSeconds: 10
+            periodSeconds: 10            
           securityContext:
             privileged: true
           image: postgres:14.7-alpine3.17
@@ -809,7 +816,15 @@ Customize username of the default CPFS admin
 oc patch CommonService common-service --type=json \
 -p '[{"op": "add", "path": "/spec/services/-",'\
 '"value":{"name":"ibm-iam-operator",'\
-'"spec":{"authentication": {"config":{"defaultAdminUser":"cpfsadmin"}}}}}]}]'
+'"spec":{"authentication": {"config":{"defaultAdminUser":"cpfsadmin"}}}}}]'
+```
+
+Based on https://www.ibm.com/docs/en/cpfs?topic=operator-versions-compatibility-foundational-services  
+Clear SecretShare resource sharing not needed for new versions
+```bash
+oc patch SecretShare common-services -n cs-control --type=json \
+-p '[{"op": "replace", "path": "/spec/configmapshares","value":[]},'\
+'{"op": "replace", "path": "/spec/secretshares","value":[]}]'
 ```
 
 ### Prepare property files
@@ -1539,7 +1554,7 @@ Customize username of the default CPFS admin
 oc patch CommonService common-service --type=json \
 -p '[{"op": "add", "path": "/spec/services/-",'\
 '"value":{"name":"ibm-iam-operator",'\
-'"spec":{"authentication": {"config":{"defaultAdminUser":"cpfsadmin"}}}}}]}]'
+'"spec":{"authentication": {"config":{"defaultAdminUser":"cpfsadmin"}}}}}]'
 ```
 
 ### Prepare property files
@@ -2269,7 +2284,7 @@ oc get statefulset icp4adeploy-bastudio-deployment -n cp4ba-dev -o yaml | grep b
 
 ## Contacts
 
-Jan Dusek  
+Jan Dušek  
 jdusek@cz.ibm.com  
 Business Automation Partner Technical Specialist  
 IBM Czech Republic
