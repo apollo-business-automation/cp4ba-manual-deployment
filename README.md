@@ -388,14 +388,6 @@ spec:
               protocol: TCP
           image: 'bitnami/openldap:2.6.4'
           imagePullPolicy: Always
-          securityContext:
-            capabilities:
-              drop:
-                - ALL
-            runAsNonRoot: true
-            allowPrivilegeEscalation: false
-            seccompProfile:
-              type: RuntimeDefault
           volumeMounts:
             - name: data
               mountPath: /bitnami/openldap/
