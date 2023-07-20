@@ -5,10 +5,10 @@ For version 23.0.1
 Installs BAW and FNCM environment.
 
 - [Disclaimer ✋](#disclaimer-)
-- [Prerequisites](#prerequisites)
-- [Needed tooling](#needed-tooling)
-- [Install preparation](#install-preparation)
-- [Command line preparation in install Pod](#command-line-preparation-in-install-pod)
+- [Preparing your cluster](#preparing-your-cluster)
+- [Preparing a client to connect to the cluster](#preparing-a-client-to-connect-to-the-cluster)
+  - [Creating an install client directly in OCP](#creating-an-install-client-directly-in-ocp)
+  - [Command line preparation in install Pod](#command-line-preparation-in-install-pod)
 - [Prerequisite software](#prerequisite-software)
   - [OpenLDAP](#openldap)
     - [Access info after deployment](#access-info-after-deployment)
@@ -17,22 +17,33 @@ Installs BAW and FNCM environment.
 - [Cloud Pak for Business Automation CASE package](#cloud-pak-for-business-automation-case-package)
 - [Cloud Pak for Business Automation Development Environment](#cloud-pak-for-business-automation-development-environment)
   - [Get certified kubernetes folder](#get-certified-kubernetes-folder)
-  - [Cluster setup](#cluster-setup)
+  - [Setting up the cluster by running a script](#setting-up-the-cluster-by-running-a-script)
   - [Customize CPFS before deployment](#customize-cpfs-before-deployment)
   - [Prepare property files](#prepare-property-files)
-  - [Generate, update and apply SQL and Secret files and validate the connectivity](#generate-update-and-apply-sql-and-secret-files-and-validate-the-connectivity)
-  - [Create and deploy CP4BA CR](#create-and-deploy-cp4ba-cr)
+  - [Generate, update and apply SQL and Secret files](#generate-update-and-apply-sql-and-secret-files)
+  - [Validate connectivity](#validate-connectivity)
+  - [Generating the custom resource with the deployment script](#generating-the-custom-resource-with-the-deployment-script)
+  - [Checking and completing your custom resource](#checking-and-completing-your-custom-resource)
+  - [Deploying the custom resource you created with the deployment script](#deploying-the-custom-resource-you-created-with-the-deployment-script)
   - [Access info after deployment](#access-info-after-deployment-2)
-  - [Post-installation](#post-installation)
+  - [Completing post-installation tasks](#completing-post-installation-tasks)
+  - [Validating your production deployment](#validating-your-production-deployment)
+  - [Next steps](#next-steps)
 - [Cloud Pak for Business Automation Test Environment](#cloud-pak-for-business-automation-test-environment)
   - [Get certified kubernetes folder](#get-certified-kubernetes-folder-1)
-  - [Cluster setup](#cluster-setup-1)
+  - [Setting up the cluster by running a script](#setting-up-the-cluster-by-running-a-script-1)
   - [Customize CPFS before deployment](#customize-cpfs-before-deployment-1)
   - [Prepare property files](#prepare-property-files-1)
-  - [Generate, update and apply SQL and Secret files and validate the connectivity](#generate-update-and-apply-sql-and-secret-files-and-validate-the-connectivity-1)
-  - [Create and deploy CP4BA CR](#create-and-deploy-cp4ba-cr-1)
+  - [Generate, update and apply SQL and Secret files](#generate-update-and-apply-sql-and-secret-files-1)
+  - [Validate connectivity](#validate-connectivity-1)
+  - [Generating the custom resource with the deployment script](#generating-the-custom-resource-with-the-deployment-script-1)
+  - [Checking and completing your custom resource](#checking-and-completing-your-custom-resource-1)
+  - [Deploying the custom resource you created with the deployment script](#deploying-the-custom-resource-you-created-with-the-deployment-script-1)
   - [Access info after deployment](#access-info-after-deployment-3)
-  - [Post-installation](#post-installation-1)
+  - [Completing post-installation tasks](#completing-post-installation-tasks-1)
+  - [Validating your production deployment](#validating-your-production-deployment-1)
+  - [Next steps](#next-steps-1)
+    - [Connect to Authoring](#connect-to-authoring)
 - [Contacts](#contacts)
 - [Notice](#notice)
 
@@ -48,7 +59,7 @@ Please do not hesitate to create an issue here if needed. Your feedback is appre
 
 Not for production use. Suitable for Demo and PoC environments - but with Production deployment.
 
-## Prerequisites
+## Preparing your cluster
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-preparing-your-cluster and  
 https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-getting-access-images-from-public-entitled-registry
@@ -60,12 +71,12 @@ https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment
 - Cluster admin user
 - IBM entitlement key from https://myibm.ibm.com/products-services/containerlibrary
 
-## Needed tooling
+## Preparing a client to connect to the cluster
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-preparing-client-connect-cluster  
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-preparing-client-connect-cluster
 and additional for script execution
 
-Provided in the install Pod.
+Requested tooling provided in the install Pod.
 
 - podman
 - openjdk9
@@ -75,7 +86,7 @@ Provided in the install Pod.
 - jq
 - git
 
-## Install preparation
+### Creating an install client directly in OCP
 
 In you OCP cluster create Project *cp4ba-install* using OpenShift console.
 ```yaml
@@ -186,7 +197,7 @@ spec:
         claimName: install
 ```
 
-## Command line preparation in install Pod
+### Command line preparation in install Pod
 
 This needs to be repeated if you don't perform this in one go and you come back to resume.
 
@@ -717,7 +728,7 @@ cp4aOperatorSdk/files/deploy/crs/cert-k8s-23.0.1.tar \
 mv /usr/install/cert-kubernetes /usr/install/cert-kubernetes-dev
 ```
 
-### Cluster setup
+### Setting up the cluster by running a script
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=cluster-setting-up-by-running-script
 
@@ -862,6 +873,8 @@ oc patch -n cp4ba-dev CommonService common-service --type=json \
 ```
 
 ### Prepare property files
+
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
 
 Generate properties for components that you would like to deploy.
 ```bash
@@ -1128,7 +1141,9 @@ sed -i \
 /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property
 ```
 
-### Generate, update and apply SQL and Secret files and validate the connectivity
+### Generate, update and apply SQL and Secret files
+
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
 
 Generate SQL and Secrets
 ```bash
@@ -1230,18 +1245,20 @@ oc project cp4ba-dev
 /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/create_secret.sh
 ```
 
-Validate connectivity
+### Validate connectivity
+
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
+
 ```bash
 /usr/install/cert-kubernetes-dev/scripts/cp4a-prerequisites.sh -m validate
 ```
 Look for all green checkmarks.
 
-### Create and deploy CP4BA CR
+### Generating the custom resource with the deployment script
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-creating-production
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-option-2-generating-custom-resource-script
 
-Run deployment script  
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-generating-custom-resource-script
+Run deployment script
 ```bash
 /usr/install/cert-kubernetes-dev/scripts/cp4a-deployment.sh
 ```
@@ -1342,7 +1359,8 @@ For details, refer to the troubleshooting section in Knowledge Center here:
 https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=automation-troubleshooting
 ```
 
-Update CR file  
+### Checking and completing your custom resource
+
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-checking-completing-your-custom-resource
 
 Change LDAP sub settings from tds to custom
@@ -1360,8 +1378,11 @@ yq -i '.spec.shared_configuration.show_sensitive_log = true' \
 /usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
+### Deploying the custom resource you created with the deployment script
+
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=cpd-option-2-deploying-custom-resource-you-created-deployment-script
+
 Apply CR  
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-deploying-custom-resource-you-created-script
 ```bash
 oc apply -n cp4ba-dev -f /usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
@@ -1393,7 +1414,9 @@ oc get -n cp4ba-dev icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}" 
 - Additional capabilities based info in Project cp4ba-dev in ConfigMap icp4adeploy-cp4ba-access-info
 - To get cpfsadmin password ```oc get secret platform-auth-idp-credentials -n cp4ba-dev -o jsonpath='{.data.admin_password}' | base64 -d```
 
-### Post-installation
+### Completing post-installation tasks
+
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-completing-post-installation-tasks
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=cpbaf-business-automation-studio  
 You need to setup permissions for your users.  
@@ -1423,7 +1446,11 @@ curl -kv -X PUT -H "Content-Type: application/json" -H "Authorization: Bearer $z
 https://cpd-cp4ba-dev.${apps_endpoint}/usermgmt/v1/user/cpadmin?add_roles=true
 ```
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-recommended-validating-your-production you can further verify the environemnts and get important information. But before running anything else then --help follow additional steps for script configuration.
+### Validating your production deployment
+
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-recommended-validating-your-production
+
+You can further verify the environemnts and get important information. But before running anything else then --help follow additional steps for script configuration.
 ```bash
 oc project cp4ba-dev
 /usr/install/cert-kubernetes-dev/scripts/cp4a-post-install.sh --help
@@ -1479,6 +1506,8 @@ Now you can run cp4a-post-install.sh with other parameters.
 /usr/install/cert-kubernetes-dev/scripts/cp4a-post-install.sh --probe # Y to continue
 ```
 
+### Next steps
+
 Follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-completing-post-installation-tasks as needed.
 
 Custom CPFS console TLS - follow https://www.ibm.com/docs/en/cloud-paks/1.0?topic=management-replacing-foundational-services-endpoint-certificates#rep_cs370
@@ -1504,10 +1533,11 @@ cp4aOperatorSdk/files/deploy/crs/cert-k8s-23.0.1.tar \
 mv /usr/install/cert-kubernetes /usr/install/cert-kubernetes-test
 ```
 
-### Cluster setup
+### Setting up the cluster by running a script
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=cluster-setting-up-by-running-script
 
+Initiate cluster admin setup
 ```bash
 /usr/install/cert-kubernetes-test/scripts/cp4a-clusteradmin-setup.sh
 ```
@@ -1630,6 +1660,8 @@ oc patch -n cp4ba-test CommonService common-service --type=json \
 ```
 
 ### Prepare property files
+
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
 
 Generate properties for components that you would like to deploy.
 ```bash
@@ -1871,7 +1903,7 @@ sed -i \
 /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property
 ```
 
-### Generate, update and apply SQL and Secret files and validate the connectivity
+### Generate, update and apply SQL and Secret files
 
 Generate SQL and Secrets
 ```bash
@@ -1973,18 +2005,20 @@ oc project cp4ba-test
 /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/create_secret.sh
 ```
 
-Validate connectivity
+### Validate connectivity
+
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
+
 ```bash
 /usr/install/cert-kubernetes-test/scripts/cp4a-prerequisites.sh -m validate
 ```
 Look for all green checkmarks.
 
-### Create and deploy CP4BA CR
+### Generating the custom resource with the deployment script
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-creating-production
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-option-2-generating-custom-resource-script
 
 Run deployment script  
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-generating-custom-resource-script
 ```bash
 /usr/install/cert-kubernetes-test/scripts/cp4a-deployment.sh
 ```
@@ -2083,7 +2117,8 @@ For details, refer to the troubleshooting section in Knowledge Center here:
 https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=automation-troubleshooting
 ```
 
-Update CR file  
+### Checking and completing your custom resource
+
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-checking-completing-your-custom-resource
 
 Change LDAP sub settings from tds to custom
@@ -2108,8 +2143,11 @@ yq -i '.spec.shared_configuration.show_sensitive_log = true' \
 /usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
+### Deploying the custom resource you created with the deployment script
+
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=cpd-option-2-deploying-custom-resource-you-created-deployment-script
+
 Apply CR  
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-deploying-custom-resource-you-created-script
 ```bash
 oc apply -n cp4ba-test -f /usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
@@ -2141,7 +2179,9 @@ oc get -n cp4ba-test icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}"
 - Additional capabilities based info in Project cp4ba-test in ConfigMap icp4adeploy-cp4ba-access-info
 - To get cpfsadmin password ```oc get secret platform-auth-idp-credentials -n cp4ba-test -o jsonpath='{.data.admin_password}' | base64 -d```
 
-### Post-installation
+### Completing post-installation tasks
+
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-completing-post-installation-tasks
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=cpbaf-business-automation-studio  
 You need to setup permissions for your users.  
@@ -2171,7 +2211,11 @@ curl -kv -X PUT -H "Content-Type: application/json" -H "Authorization: Bearer $z
 https://cpd-cp4ba-test.${apps_endpoint}/usermgmt/v1/user/cpadmin?add_roles=true
 ```
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-recommended-validating-your-production you can further verify the environemnts and get important information. But before running anything else then --help follow additional steps for script configuration.
+### Validating your production deployment
+
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-recommended-validating-your-production
+
+You can further verify the environemnts and get important information. But before running anything else then --help follow additional steps for script configuration.
 ```bash
 oc project cp4ba-test
 /usr/install/cert-kubernetes-test/scripts/cp4a-post-install.sh --help
@@ -2227,6 +2271,8 @@ Now you can run cp4a-post-install.sh with other parameters.
 /usr/install/cert-kubernetes-test/scripts/cp4a-post-install.sh --probe # Y to continue
 ```
 
+### Next steps
+
 Follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-completing-post-installation-tasks as needed.
 
 Custom CPFS console TLS - follow https://www.ibm.com/docs/en/cloud-paks/1.0?topic=management-replacing-foundational-services-endpoint-certificates#rep_cs370
@@ -2235,7 +2281,8 @@ Custom Zen certificates - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-a
 
 Custom CPFS admin password - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=tasks-cloud-pak-foundational-services
 
-Connect to Authoring  
+#### Connect to Authoring  
+
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=customizing-business-automation-workflow-runtime-connect-workflow-authoring
 The exchange needs to happen periodically based on the validity of the certificates.
 
