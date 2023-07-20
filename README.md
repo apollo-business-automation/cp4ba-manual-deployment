@@ -18,6 +18,7 @@ Installs BAW and FNCM environment.
 - [Cloud Pak for Business Automation Development Environment](#cloud-pak-for-business-automation-development-environment)
   - [Get certified kubernetes folder](#get-certified-kubernetes-folder)
   - [Cluster setup](#cluster-setup)
+  - [Customize CPFS before deployment](#customize-cpfs-before-deployment)
   - [Prepare property files](#prepare-property-files)
   - [Generate, update and apply SQL and Secret files and validate the connectivity](#generate-update-and-apply-sql-and-secret-files-and-validate-the-connectivity)
   - [Create and deploy CP4BA CR](#create-and-deploy-cp4ba-cr)
@@ -26,6 +27,7 @@ Installs BAW and FNCM environment.
 - [Cloud Pak for Business Automation Test Environment](#cloud-pak-for-business-automation-test-environment)
   - [Get certified kubernetes folder](#get-certified-kubernetes-folder-1)
   - [Cluster setup](#cluster-setup-1)
+  - [Customize CPFS before deployment](#customize-cpfs-before-deployment-1)
   - [Prepare property files](#prepare-property-files-1)
   - [Generate, update and apply SQL and Secret files and validate the connectivity](#generate-update-and-apply-sql-and-secret-files-and-validate-the-connectivity-1)
   - [Create and deploy CP4BA CR](#create-and-deploy-cp4ba-cr-1)
@@ -48,6 +50,9 @@ Not for production use. Suitable for Demo and PoC environments - but with Produc
 
 ## Prerequisites
 
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-preparing-your-cluster and  
+https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-getting-access-images-from-public-entitled-registry
+
 - Empty OpenShift cluster of a supported version
 - With direct internet connection
 - File RWX StorageClass - in this case ocs-storagecluster-cephfs is used, feel free to find and replace
@@ -56,6 +61,9 @@ Not for production use. Suitable for Demo and PoC environments - but with Produc
 - IBM entitlement key from https://myibm.ibm.com/products-services/containerlibrary
 
 ## Needed tooling
+
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-preparing-client-connect-cluster  
+and additional for script execution
 
 Provided in the install Pod.
 
@@ -835,6 +843,24 @@ Wait until all Operators in Project cp4ba-dev are in *Succeeded* state.
 oc get csv -n cp4ba-dev -w
 ```
 
+### Customize CPFS before deployment
+
+Based on https://www.ibm.com/docs/en/cloud-paks/foundational-services/4.0?topic=options-configuring-foundational-services
+
+Prepare services configurations
+```bash
+oc patch -n cp4ba-dev CommonService common-service --type=json \
+-p '[{"op": "add", "path": "/spec/services", "value":[]}]'
+```
+
+Change mongodb storage class
+```bash
+oc patch -n cp4ba-dev CommonService common-service --type=json \
+-p '[{"op": "add", "path": "/spec/services/-",'\
+'"value":{"name":"ibm-im-mongodb-operator",'\
+'"spec":{"mongoDB": {"storageClass":"ocs-storagecluster-ceph-rbd"}}}}]'
+```
+
 ### Prepare property files
 
 Generate properties for components that you would like to deploy.
@@ -1583,6 +1609,24 @@ Wait until the script finishes.
 Wait until all Operators in Project cp4ba-test are in *Succeeded* state.
 ```bash
 oc get csv -n cp4ba-test -w
+```
+
+### Customize CPFS before deployment
+
+Based on https://www.ibm.com/docs/en/cloud-paks/foundational-services/4.0?topic=options-configuring-foundational-services
+
+Prepare services configurations
+```bash
+oc patch -n cp4ba-test CommonService common-service --type=json \
+-p '[{"op": "add", "path": "/spec/services", "value":[]}]'
+```
+
+Change mongodb storage class
+```bash
+oc patch -n cp4ba-test CommonService common-service --type=json \
+-p '[{"op": "add", "path": "/spec/services/-",'\
+'"value":{"name":"ibm-im-mongodb-operator",'\
+'"spec":{"mongoDB": {"storageClass":"ocs-storagecluster-ceph-rbd"}}}}]'
 ```
 
 ### Prepare property files
