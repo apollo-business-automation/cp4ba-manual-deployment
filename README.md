@@ -14,9 +14,8 @@ Installs BAW and FNCM environment.
     - [Access info after deployment](#access-info-after-deployment)
   - [PostgreSQL](#postgresql)
     - [Access info after deployment](#access-info-after-deployment-1)
-- [Cloud Pak for Business Automation CASE package](#cloud-pak-for-business-automation-case-package)
 - [Cloud Pak for Business Automation Development Environment](#cloud-pak-for-business-automation-development-environment)
-  - [Get certified kubernetes folder](#get-certified-kubernetes-folder)
+  - [Preparing a client to connect to the cluster](#preparing-a-client-to-connect-to-the-cluster-1)
   - [Setting up the cluster by running a script](#setting-up-the-cluster-by-running-a-script)
   - [Customize CPFS before deployment](#customize-cpfs-before-deployment)
   - [Prepare property files](#prepare-property-files)
@@ -30,7 +29,7 @@ Installs BAW and FNCM environment.
   - [Validating your production deployment](#validating-your-production-deployment)
   - [Next steps](#next-steps)
 - [Cloud Pak for Business Automation Test Environment](#cloud-pak-for-business-automation-test-environment)
-  - [Get certified kubernetes folder](#get-certified-kubernetes-folder-1)
+  - [Preparing a client to connect to the cluster](#preparing-a-client-to-connect-to-the-cluster-2)
   - [Setting up the cluster by running a script](#setting-up-the-cluster-by-running-a-script-1)
   - [Customize CPFS before deployment](#customize-cpfs-before-deployment-1)
   - [Prepare property files](#prepare-property-files-1)
@@ -74,7 +73,7 @@ https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment
 ## Preparing a client to connect to the cluster
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-preparing-client-connect-cluster
-and additional for script execution
+and additional utilities for script execution
 
 Requested tooling provided in the install Pod.
 
@@ -204,7 +203,7 @@ This needs to be repeated if you don't perform this in one go and you come back 
 Open Terminal window of the *install* pod.
 
 Enter bash.
-```
+```sh
 bash
 ```
 
@@ -331,7 +330,7 @@ data:
     cn: cpusers
     member: uid=cpadmin,ou=Users,dc=cp,dc=internal
     member: uid=cpuser,ou=Users,dc=cp,dc=internal
-" | oc apply -f -    
+" | oc apply -f -
 ```
 
 Create Secret for password
@@ -697,54 +696,41 @@ PostgreSQL
 - cpadmin / Password
 - In PostgreSQL Pod terminal `psql postgresql://cpadmin:Password@localhost:5432/postgresdb`
 
-## Cloud Pak for Business Automation CASE package
-
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-preparing-client-connect-cluster
-
-```bash
-# Download the package
-curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
-ibm-cp-automation/5.0.0/ibm-cp-automation-5.0.0.tgz \
---output /usr/install/ibm-cp-automation-5.0.0.tgz
-
-# Extract the package
-tar xzvf /usr/install/ibm-cp-automation-5.0.0.tgz -C /usr/install
-```
-
 ## Cloud Pak for Business Automation Development Environment
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployments-installing-cp4ba-multi-pattern-production-deployment
 
-### Get certified kubernetes folder
+### Preparing a client to connect to the cluster
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-preparing-client-connect-cluster
-```bash
-# Extract cert-kubernetes
-tar xvf /usr/install/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-k8s-23.0.1.tar \
--C /usr/install
 
-# Rename directory for dev
-mv /usr/install/cert-kubernetes /usr/install/cert-kubernetes-dev
+```bash
+# Create directory for cp4ba-dev
+mkdir /usr/install/cp4ba-dev
+
+# Download the package
+curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
+ibm-cp-automation/5.0.0/ibm-cp-automation-5.0.0.tgz \
+--output /usr/install/cp4ba-dev/ibm-cp-automation-5.0.0.tgz
+
+# Extract the package
+tar xzvf /usr/install/cp4ba-dev/ibm-cp-automation-5.0.0.tgz -C /usr/install/cp4ba-dev/
+
+# Extract cert-kubernetes
+tar xvf /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-k8s-23.0.1.tar \
+-C /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/
 ```
 
 ### Setting up the cluster by running a script
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=cluster-setting-up-by-running-script
 
-Initiate cluster admin setup
 ```bash
-/usr/install/cert-kubernetes-dev/scripts/cp4a-clusteradmin-setup.sh
-```
-
-You would see that as the next action IBM Cert Manager and IBM License Manager have to be installed
-```text
-[NEXT ACTION]: How to install IBM Cert Manager and IBM License Manager Operator using setup_singleton.sh script.
-```
-
-```bash
-git clone -b scripts https://github.com/IBM/ibm-common-service-operator.git /usr/install/ibm-common-service-operator
-/usr/install/ibm-common-service-operator/cp3pt0-deployment/setup_singleton.sh --enable-licensing --license-accept
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/scripts/\
+cpfs/installer_scripts/cp3pt0-deployment/setup_singleton.sh --enable-licensing --license-accept
 ```
 
 Wait for the command to complete ending with
@@ -754,9 +740,10 @@ ibmlicensing.operator.ibm.com/instance patched
 [INFO] License accepted for ibmlicensing instance.
 ```
 
-Initiate cluster admin setup again
+Initiate cluster admin setup
 ```bash
-/usr/install/cert-kubernetes-dev/scripts/cp4a-clusteradmin-setup.sh
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-clusteradmin-setup.sh
 ```
 
 ```text
@@ -807,18 +794,20 @@ Creating docker-registry secret for Entitlement Registry key in project cp4ba-de
 secret/ibm-entitlement-key created
 Done
 
-Waiting for the Cloud Pak for Business Automation operator to be ready. This might take a few minutes... 
+Waiting for the Cloud Pak for Business Automation operator to be ready. This might take a few minutes...
 
-catalogsource.operators.coreos.com/ibm-cp4a-operator-catalog created
-catalogsource.operators.coreos.com/ibm-cs-flink-operator-catalog created
-catalogsource.operators.coreos.com/ibm-cs-elastic-operator-catalog created
-catalogsource.operators.coreos.com/ibm-cert-manager-catalog created
-catalogsource.operators.coreos.com/ibm-licensing-catalog created
-catalogsource.operators.coreos.com/opencloud-operators-v4-0 created
-catalogsource.operators.coreos.com/bts-operator created
-catalogsource.operators.coreos.com/cloud-native-postgresql-catalog created
-catalogsource.operators.coreos.com/ibm-fncm-operator-catalog created
-IBM Operator Catalog source Created!
+ibm-cp4a-operator-catalog         ibm-cp4a-operator                 grpc   IBM         35m
+Found existing ibm operator catalog source, updating it
+catalogsource.operators.coreos.com/ibm-cp4a-operator-catalog unchanged
+catalogsource.operators.coreos.com/ibm-cs-flink-operator-catalog unchanged
+catalogsource.operators.coreos.com/ibm-cs-elastic-operator-catalog unchanged
+catalogsource.operators.coreos.com/ibm-cert-manager-catalog unchanged
+catalogsource.operators.coreos.com/ibm-licensing-catalog unchanged
+catalogsource.operators.coreos.com/opencloud-operators-v4-0 unchanged
+catalogsource.operators.coreos.com/bts-operator unchanged
+catalogsource.operators.coreos.com/cloud-native-postgresql-catalog unchanged
+catalogsource.operators.coreos.com/ibm-fncm-operator-catalog unchanged
+IBM Operator Catalog source updated!
 
 [INFO] Waiting for CP4BA Operator Catalog pod initialization
 ...
@@ -856,6 +845,8 @@ oc get csv -n cp4ba-dev -w
 
 ### Customize CPFS before deployment
 
+TODO remove when fixed
+
 Based on https://www.ibm.com/docs/en/cloud-paks/foundational-services/4.0?topic=options-configuring-foundational-services
 
 Prepare services configurations
@@ -878,7 +869,8 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=p
 
 Generate properties for components that you would like to deploy.
 ```bash
-/usr/install/cert-kubernetes-dev/scripts/cp4a-prerequisites.sh -m property
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-prerequisites.sh -m property
 ```
 
 Answer as follows.
@@ -939,7 +931,7 @@ What is the LDAP type used for this deployment?
 1) Microsoft Active Directory
 2) Tivoli Directory Server / Security Directory Server
 Enter a valid option [1 to 2]: 2
-[*] You can change the parameter "LDAP_SSL_ENABLED" in the property file "/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property" later. "LDAP_SSL_ENABLED" is "TRUE" by default.
+[*] You can change the parameter "LDAP_SSL_ENABLED" in the property file "/usr/install/cp4ba-dev/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property" later. "LDAP_SSL_ENABLED" is "TRUE" by default.
 
 To provision the persistent volumes and volume claims
 please enter the file storage classname for slow storage(RWX): ocs-storagecluster-cephfs
@@ -954,8 +946,8 @@ What is the Database type used for this deployment?
 4) PostgreSQL
 Enter a valid option [1 to 4]: 4
 
-[*] You can change the parameter "DATABASE_SSL_ENABLE" in the property file "/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property" later. "DATABASE_SSL_ENABLE" is "TRUE" by default.
-[*] You can change the parameter "POSTGRESQL_SSL_CLIENT_SERVER" in the property file "/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property" later. "POSTGRESQL_SSL_CLIENT_SERVER" is "TRUE" by default
+[*] You can change the parameter "DATABASE_SSL_ENABLE" in the property file "/usr/install/cp4ba-dev/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property" later. "DATABASE_SSL_ENABLE" is "TRUE" by default.
+[*] You can change the parameter "POSTGRESQL_SSL_CLIENT_SERVER" in the property file "/usr/install/cp4ba-dev/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property" later. "POSTGRESQL_SSL_CLIENT_SERVER" is "TRUE" by default
 [*] - POSTGRESQL_SSL_CLIENT_SERVER="True": For a PostgreSQL database with both server and client authentication
 [*] - POSTGRESQL_SSL_CLIENT_SERVER="False": For a PostgreSQL database with server-only authentication
 
@@ -996,7 +988,7 @@ Creating Property file for IBM Business Automation Studio
 
 ============== Created all property files for CP4BA ==============
 [NEXT ACTIONS]
-Enter the <Required> values in the property files under /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile
+Enter the <Required> values in the property files under /usr/install/cp4ba-dev/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile
 [*] The key name in the property file is created by the cp4a-prerequisites.sh and is NOT EDITABLE.
 [*] The value in the property file must be within double quotes.
 [*] The value for User/Password in [cp4ba_db_name_user.property] [cp4ba_user_profile.property] file should NOT include special characters "=" "." "\"
@@ -1026,8 +1018,10 @@ Update values for cp4ba_db_server.property
 
 ```bash
 # Backup generated file
-cp /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property \
-/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property.bak
+cp /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property \
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -1036,15 +1030,20 @@ sed -i \
 -e 's/postgresql.DATABASE_PORT="<Required>"/postgresql.DATABASE_PORT="5432"/g' \
 -e 's/postgresql.DATABASE_SSL_ENABLE="True"/postgresql.DATABASE_SSL_ENABLE="False"/g' \
 -e 's/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="True"/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="False"/g' \
-/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property
 ```
 
 Update values for cp4ba_db_name_user.property
 ```bash
 # Backup generated file
-cp /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property \
-/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
+cp /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property \
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
+```
 
+```bash
 # Update generated file with real values
 sed -i \
 -e 's/postgresql.GCD_DB_NAME="GCDDB"/postgresql.GCD_DB_NAME="DEVGCD"/g' \
@@ -1079,14 +1078,17 @@ sed -i \
 -e 's/postgresql.STUDIO_DB_NAME="BASDB"/postgresql.STUDIO_DB_NAME="DEVBAS"/g' \
 -e 's/postgresql.STUDIO_DB_USER_NAME="<youruser1>"/postgresql.STUDIO_DB_USER_NAME="devbas"/g' \
 -e 's/postgresql.STUDIO_DB_USER_PASSWORD="<yourpassword>"/postgresql.STUDIO_DB_USER_PASSWORD="Password"/g' \
-/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
 ```
 
 Update values for cp4ba_LDAP.property
 ```bash
 # Backup generated file
-cp /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property \
-/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property.bak
+cp /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property \
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -1100,14 +1102,17 @@ sed -i \
 -e 's/LDAP_USER_NAME_ATTRIBUTE="\*:uid"/LDAP_USER_NAME_ATTRIBUTE="*:cn"/g' \
 -e 's/LDAP_GROUP_BASE_DN="<Required>"/LDAP_GROUP_BASE_DN="ou=Groups,dc=cp,dc=internal"/g' \
 -e 's/LC_USER_FILTER="(\&(cn=%v)(objectclass=person))"/LC_USER_FILTER="(\&(uid=%v)(objectclass=inetOrgPerson))"/g' \
-/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property
 ```
 
 Update values for cp4ba_user_profile.property
 ```bash
 # Backup generated file
-cp /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property \
-/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property.bak
+cp /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property \
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -1138,7 +1143,8 @@ sed -i \
 -e 's/BAN.KEYSTORE_PASSWORD="<Required>"/BAN.KEYSTORE_PASSWORD="Password"/g' \
 -e 's/APP_ENGINE.ADMIN_USER="<Required>"/APP_ENGINE.ADMIN_USER="cpadmin"/g' \
 -e 's/BASTUDIO.ADMIN_USER="<Required>"/BASTUDIO.ADMIN_USER="cpadmin"/g' \
-/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property
 ```
 
 ### Generate, update and apply SQL and Secret files
@@ -1147,7 +1153,8 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=p
 
 Generate SQL and Secrets
 ```bash
-/usr/install/cert-kubernetes-dev/scripts/cp4a-prerequisites.sh -m generate
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-prerequisites.sh -m generate
 ```
 PostgreSQL instance configured in a way that tablespace path in some of the generated SQL create scripts doesn't need updating.
 
@@ -1155,13 +1162,15 @@ Update GCD create script table space path
 ```bash
 sed -i \
 -e 's|/pgsqldata/gcd|/pgsqldata/devgcd|g' \
-/usr/install/cert-kubernetes-dev/scripts/\
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
 cp4ba-prerequisites/dbscript/fncm/postgresql/postgresql/createGCDDB.sql
 ```
 
 Copy create scripts to PostgreSQL instance
 ```bash
-oc cp /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/dbscript \
+oc cp /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/dbscript \
 cp4ba-postgresql/$(oc get pods --namespace cp4ba-postgresql -o name | cut -d"/" -f2):/usr/dbscript-dev
 ```
 
@@ -1236,13 +1245,15 @@ oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 --file=/usr/dbscript-dev/fncm/postgresql/postgresql/createGCDDB.sql'
 ```
 
-Apply secrets which are in /usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/secret_template/.
+Apply secrets which are in /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/.
 ```bash
 # Switch to Project
 oc project cp4ba-dev
 
 # Apply secrets
-/usr/install/cert-kubernetes-dev/scripts/cp4ba-prerequisites/create_secret.sh
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/create_secret.sh
 ```
 
 ### Validate connectivity
@@ -1250,7 +1261,8 @@ oc project cp4ba-dev
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
 
 ```bash
-/usr/install/cert-kubernetes-dev/scripts/cp4a-prerequisites.sh -m validate
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-prerequisites.sh -m validate
 ```
 Look for all green checkmarks.
 
@@ -1260,7 +1272,8 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=d
 
 Run deployment script
 ```bash
-/usr/install/cert-kubernetes-dev/scripts/cp4a-deployment.sh
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-deployment.sh
 ```
 
 ```text
@@ -1346,12 +1359,12 @@ To make changes, enter "No" (default: No): Yes
 Creating the Custom Resource of the Cloud Pak for Business Automation operator...
 
 Applying value in property file into final CR
-[✔] Applied value in property file into final CR under /usr/install/cert-kubernetes-dev/scripts/generated-cr
-Please confirm final custom resource under /usr/install/cert-kubernetes-dev/scripts/generated-cr
+[✔] Applied value in property file into final CR under /usr/install/cp4ba-dev/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr
+Please confirm final custom resource under /usr/install/cp4ba-dev/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr
 
-The custom resource file used is: "/usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml"
+The custom resource file used is: "/usr/install/cp4ba-dev/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml"
 
-ATTENTION: If the cluster is running a Linux on Z (s390x)/Power architecture, remove the baml_configuration section from "/usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml" before you apply the custom resource. Business Automation Machine Learning Server (BAML) is not supported on this architecture.
+ATTENTION: If the cluster is running a Linux on Z (s390x)/Power architecture, remove the baml_configuration section from "/usr/install/cp4ba-dev/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml" before you apply the custom resource. Business Automation Machine Learning Server (BAML) is not supported on this architecture.
 
 
 To monitor the deployment status, follow the Operator logs.
@@ -1367,15 +1380,18 @@ Change LDAP sub settings from tds to custom
 ```bash
 sed -i \
 -e 's/tds:/custom:/g' \
-/usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
-If you want to see all debug output in operator logs add th efollowing properties (Not for production use, can leak sensitive info!)
+If you want to see all debug output in operator logs add the following properties (Not for production use, can leak sensitive info!)
 ```bash
 yq -i '.spec.shared_configuration.no_log = false' \
-/usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 yq -i '.spec.shared_configuration.show_sensitive_log = true' \
-/usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
 ### Deploying the custom resource you created with the deployment script
@@ -1384,7 +1400,8 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=c
 
 Apply CR  
 ```bash
-oc apply -n cp4ba-dev -f /usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+oc apply -n cp4ba-dev -f /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
 Wait for the deployment to be completed. Can be determined by looking in Project cp4ba-dev in Kind ICP4ACluster, instance named icp4adeploy to have the following conditions:
@@ -1453,7 +1470,8 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=d
 You can further verify the environemnts and get important information. But before running anything else then --help follow additional steps for script configuration.
 ```bash
 oc project cp4ba-dev
-/usr/install/cert-kubernetes-dev/scripts/cp4a-post-install.sh --help
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --help
 ```
 
 Perform setup for cp4a-post-install.sh script
@@ -1495,15 +1513,20 @@ sed -i \
 'PROBE_USER_NAME="cpadmin"/g' \
 -e 's/PROBE_USER_PASSWORD=/'\
 'PROBE_USER_PASSWORD="Password"/g' \
-/usr/install/cert-kubernetes-dev/scripts/helper/post-install/env.sh
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/helper/post-install/env.sh
 ```
 
 Now you can run cp4a-post-install.sh with other parameters.
 ```bash
-/usr/install/cert-kubernetes-dev/scripts/cp4a-post-install.sh --precheck
-/usr/install/cert-kubernetes-dev/scripts/cp4a-post-install.sh --status
-/usr/install/cert-kubernetes-dev/scripts/cp4a-post-install.sh --console
-/usr/install/cert-kubernetes-dev/scripts/cp4a-post-install.sh --probe # Y to continue
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --precheck
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --status
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --console
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --probe # Y to continue
 ```
 
 ### Next steps
@@ -1520,26 +1543,50 @@ Custom Zen certificates - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-a
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployments-installing-cp4ba-multi-pattern-production-deployment
 
-### Get certified kubernetes folder
+### Preparing a client to connect to the cluster
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-preparing-client-connect-cluster
-```bash
-# Extract cert-kubernetes
-tar xvf /usr/install/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-k8s-23.0.1.tar \
--C /usr/install
 
-# Rename directory for test
-mv /usr/install/cert-kubernetes /usr/install/cert-kubernetes-test
+```bash
+# Create directory for cp4ba-test
+mkdir /usr/install/cp4ba-test
+
+# Download the package
+curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
+ibm-cp-automation/5.0.0/ibm-cp-automation-5.0.0.tgz \
+--output /usr/install/cp4ba-test/ibm-cp-automation-5.0.0.tgz
+
+# Extract the package
+tar xzvf /usr/install/cp4ba-test/ibm-cp-automation-5.0.0.tgz -C /usr/install/cp4ba-test/
+
+# Extract cert-kubernetes
+tar xvf /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-k8s-23.0.1.tar \
+-C /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/
 ```
 
 ### Setting up the cluster by running a script
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=cluster-setting-up-by-running-script
 
+```bash
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/scripts/\
+cpfs/installer_scripts/cp3pt0-deployment/setup_singleton.sh --enable-licensing --license-accept
+```
+
+Wait for the command to complete ending with
+```text
+[✔] ibmlicensing instance present
+ibmlicensing.operator.ibm.com/instance patched
+[INFO] License accepted for ibmlicensing instance.
+```
+
 Initiate cluster admin setup
 ```bash
-/usr/install/cert-kubernetes-test/scripts/cp4a-clusteradmin-setup.sh
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-clusteradmin-setup.sh
 ```
 
 ```text
@@ -1643,6 +1690,8 @@ oc get csv -n cp4ba-test -w
 
 ### Customize CPFS before deployment
 
+TODO remove when fixed
+
 Based on https://www.ibm.com/docs/en/cloud-paks/foundational-services/4.0?topic=options-configuring-foundational-services
 
 Prepare services configurations
@@ -1665,7 +1714,8 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=p
 
 Generate properties for components that you would like to deploy.
 ```bash
-/usr/install/cert-kubernetes-test/scripts/cp4a-prerequisites.sh -m property
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-prerequisites.sh -m property
 ```
 
 Answer as follows.
@@ -1705,7 +1755,8 @@ What is the LDAP type used for this deployment?
 1) Microsoft Active Directory
 2) Tivoli Directory Server / Security Directory Server
 Enter a valid option [1 to 2]: 2
-[*] You can change the parameter "LDAP_SSL_ENABLED" in the property file "/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property" later. "LDAP_SSL_ENABLED" is "TRUE" by default.
+[*] You can change the parameter "LDAP_SSL_ENABLED" in the property file "/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property" later. "LDAP_SSL_ENABLED" is "TRUE" by default.
 
 To provision the persistent volumes and volume claims
 please enter the file storage classname for slow storage(RWX): ocs-storagecluster-cephfs
@@ -1720,8 +1771,10 @@ What is the Database type used for this deployment?
 4) PostgreSQL
 Enter a valid option [1 to 4]: 4
 
-[*] You can change the parameter "DATABASE_SSL_ENABLE" in the property file "/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property" later. "DATABASE_SSL_ENABLE" is "TRUE" by default.
-[*] You can change the parameter "POSTGRESQL_SSL_CLIENT_SERVER" in the property file "/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property" later. "POSTGRESQL_SSL_CLIENT_SERVER" is "TRUE" by default
+[*] You can change the parameter "DATABASE_SSL_ENABLE" in the property file "/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property" later. "DATABASE_SSL_ENABLE" is "TRUE" by default.
+[*] You can change the parameter "POSTGRESQL_SSL_CLIENT_SERVER" in the property file "/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property" later. "POSTGRESQL_SSL_CLIENT_SERVER" is "TRUE" by default
 [*] - POSTGRESQL_SSL_CLIENT_SERVER="True": For a PostgreSQL database with both server and client authentication
 [*] - POSTGRESQL_SSL_CLIENT_SERVER="False": For a PostgreSQL database with server-only authentication
 
@@ -1756,7 +1809,8 @@ Creating Property file for IBM Business Automation Studio
 
 ============== Created all property files for CP4BA ==============
 [NEXT ACTIONS]
-Enter the <Required> values in the property files under /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile
+Enter the <Required> values in the property files under /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile
 [*] The key name in the property file is created by the cp4a-prerequisites.sh and is NOT EDITABLE.
 [*] The value in the property file must be within double quotes.
 [*] The value for User/Password in [cp4ba_db_name_user.property] [cp4ba_user_profile.property] file should NOT include special characters "=" "." "\"
@@ -1786,8 +1840,10 @@ Update values for cp4ba_db_server.property
 
 ```bash
 # Backup generated file
-cp /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property \
-/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property.bak
+cp /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property \
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -1796,15 +1852,19 @@ sed -i \
 -e 's/postgresql.DATABASE_PORT="<Required>"/postgresql.DATABASE_PORT="5432"/g' \
 -e 's/postgresql.DATABASE_SSL_ENABLE="True"/postgresql.DATABASE_SSL_ENABLE="False"/g' \
 -e 's/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="True"/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="False"/g' \
-/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property
 ```
 
 Update values for cp4ba_db_name_user.property
 ```bash
 # Backup generated file
-cp /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property \
-/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
+cp /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property \
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
 ```
+
 ```bash
 # Update generated file with real values
 sed -i \
@@ -1824,6 +1884,13 @@ sed -i \
 -e 's/postgresql.BAWTOS_DB_NAME="BAWTOS"/postgresql.BAWTOS_DB_NAME="TESTBAWTOS"/g' \
 -e 's/postgresql.BAWTOS_DB_USER_NAME="<youruser1>"/postgresql.BAWTOS_DB_USER_NAME="testbawtos"/g' \
 -e 's/postgresql.BAWTOS_DB_USER_PASSWORD="<yourpassword>"/postgresql.BAWTOS_DB_USER_PASSWORD="Password"/g' \
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
+```
+
+```bash
+# Update generated file with real values
+sed -i \
 -e 's/postgresql.CHOS_DB_NAME="CHOS"/postgresql.CHOS_DB_NAME="TESTCHOS"/g' \
 -e 's/postgresql.CHOS_DB_USER_NAME="<youruser1>"/postgresql.CHOS_DB_USER_NAME="testchos"/g' \
 -e 's/postgresql.CHOS_DB_USER_PASSWORD="<yourpassword>"/postgresql.CHOS_DB_USER_PASSWORD="Password"/g' \
@@ -1841,14 +1908,17 @@ sed -i \
 -e 's/postgresql.BAW_RUNTIME_DB_USER_NAME="<youruser1>"/postgresql.BAW_RUNTIME_DB_USER_NAME="testbaw"/g' \
 -e 's/postgresql.BAW_RUNTIME_DB_USER_PASSWORD="<yourpassword>"/'\
 'postgresql.BAW_RUNTIME_DB_USER_PASSWORD="Password"/g' \
-/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
 ```
 
 Update values for cp4ba_LDAP.property
 ```bash
 # Backup generated file
-cp /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property \
-/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property.bak
+cp /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property \
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -1862,14 +1932,17 @@ sed -i \
 -e 's/LDAP_USER_NAME_ATTRIBUTE="\*:uid"/LDAP_USER_NAME_ATTRIBUTE="*:cn"/g' \
 -e 's/LDAP_GROUP_BASE_DN="<Required>"/LDAP_GROUP_BASE_DN="ou=Groups,dc=cp,dc=internal"/g' \
 -e 's/LC_USER_FILTER="(\&(cn=%v)(objectclass=person))"/LC_USER_FILTER="(\&(uid=%v)(objectclass=inetOrgPerson))"/g' \
-/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property
 ```
 
 Update values for cp4ba_user_profile.property
 ```bash
 # Backup generated file
-cp /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property \
-/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property.bak
+cp /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property \
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -1900,14 +1973,16 @@ sed -i \
 -e 's/BAN.KEYSTORE_PASSWORD="<Required>"/BAN.KEYSTORE_PASSWORD="Password"/g' \
 -e 's/APP_ENGINE.ADMIN_USER="<Required>"/APP_ENGINE.ADMIN_USER="cpadmin"/g' \
 -e 's/BAW_RUNTIME.ADMIN_USER="<Required>"/BAW_RUNTIME.ADMIN_USER="cpadmin"/g' \
-/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property
 ```
 
 ### Generate, update and apply SQL and Secret files
 
 Generate SQL and Secrets
 ```bash
-/usr/install/cert-kubernetes-test/scripts/cp4a-prerequisites.sh -m generate
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-prerequisites.sh -m generate
 ```
 PostgreSQL instance configured in a way that tablespace path in some of the generated SQL create scripts doesn't need updating.
 
@@ -1915,13 +1990,15 @@ Update GCD create script table space path
 ```bash
 sed -i \
 -e 's|/pgsqldata/gcd|/pgsqldata/testgcd|g' \
-/usr/install/cert-kubernetes-test/scripts/\
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
 cp4ba-prerequisites/dbscript/fncm/postgresql/postgresql/createGCDDB.sql
 ```
 
 Copy create scripts to PostgreSQL instance
 ```bash
-oc cp /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/dbscript \
+oc cp /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/dbscript \
 cp4ba-postgresql/$(oc get pods --namespace cp4ba-postgresql -o name | cut -d"/" -f2):/usr/dbscript-test
 ```
 
@@ -1996,13 +2073,15 @@ oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 --file=/usr/dbscript-test/fncm/postgresql/postgresql/createGCDDB.sql'
 ```
 
-Apply secrets which are in /usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/secret_template/.
+Apply secrets which are in /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/secret_template/.
 ```bash
 # Switch to Project
 oc project cp4ba-test
 
 # Apply secrets
-/usr/install/cert-kubernetes-test/scripts/cp4ba-prerequisites/create_secret.sh
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/create_secret.sh
 ```
 
 ### Validate connectivity
@@ -2010,7 +2089,8 @@ oc project cp4ba-test
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
 
 ```bash
-/usr/install/cert-kubernetes-test/scripts/cp4a-prerequisites.sh -m validate
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-prerequisites.sh -m validate
 ```
 Look for all green checkmarks.
 
@@ -2020,7 +2100,8 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=d
 
 Run deployment script  
 ```bash
-/usr/install/cert-kubernetes-test/scripts/cp4a-deployment.sh
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-deployment.sh
 ```
 
 ```text
@@ -2104,12 +2185,16 @@ To make changes, enter "No" (default: No): Yes
 Creating the Custom Resource of the Cloud Pak for Business Automation operator...
 
 Applying value in property file into final CR
-[✔] Applied value in property file into final CR under /usr/install/cert-kubernetes-test/scripts/generated-cr
-Please confirm final custom resource under /usr/install/cert-kubernetes-test/scripts/generated-cr
+[✔] Applied value in property file into final CR under /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr
+Please confirm final custom resource under /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr
 
-The custom resource file used is: "/usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml"
+The custom resource file used is: "/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml"
 
-ATTENTION: If the cluster is running a Linux on Z (s390x)/Power architecture, remove the baml_configuration section from "/usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml" before you apply the custom resource. Business Automation Machine Learning Server (BAML) is not supported on this architecture.
+ATTENTION: If the cluster is running a Linux on Z (s390x)/Power architecture, remove the baml_configuration section from "/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml" before you apply the custom resource. Business Automation Machine Learning Server (BAML) is not supported on this architecture.
 
 
 To monitor the deployment status, follow the Operator logs.
@@ -2125,22 +2210,26 @@ Change LDAP sub settings from tds to custom
 ```bash
 sed -i \
 -e 's/tds:/custom:/g' \
-/usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=parameters-business-automation-workflow-runtime-workstream-services  
 Set env type to Test
 ```bash
 yq -i '.spec.baw_configuration[0].env_type = "Test"' \
-/usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
-If you want to see all debug output in operator logs add th efollowing properties (Not for production use, can leak sensitive info!)
+If you want to see all debug output in operator logs add the following properties (Not for production use, can leak sensitive info!)
 ```bash
 yq -i '.spec.shared_configuration.no_log = false' \
-/usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 yq -i '.spec.shared_configuration.show_sensitive_log = true' \
-/usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
 ### Deploying the custom resource you created with the deployment script
@@ -2149,7 +2238,8 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=c
 
 Apply CR  
 ```bash
-oc apply -n cp4ba-test -f /usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+oc apply -n cp4ba-test -f /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
 Wait for the deployment to be completed. Can be determined by looking in Project cp4ba-test in Kind ICP4ACluster, instance named icp4adeploy to have the following conditions:
@@ -2218,7 +2308,8 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=d
 You can further verify the environemnts and get important information. But before running anything else then --help follow additional steps for script configuration.
 ```bash
 oc project cp4ba-test
-/usr/install/cert-kubernetes-test/scripts/cp4a-post-install.sh --help
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --help
 ```
 
 Perform setup for cp4a-post-install.sh script
@@ -2260,15 +2351,20 @@ sed -i \
 'PROBE_USER_NAME="cpadmin"/g' \
 -e 's/PROBE_USER_PASSWORD=/'\
 'PROBE_USER_PASSWORD="Password"/g' \
-/usr/install/cert-kubernetes-test/scripts/helper/post-install/env.sh
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/helper/post-install/env.sh
 ```
 
 Now you can run cp4a-post-install.sh with other parameters.
 ```bash
-/usr/install/cert-kubernetes-test/scripts/cp4a-post-install.sh --precheck
-/usr/install/cert-kubernetes-test/scripts/cp4a-post-install.sh --status
-/usr/install/cert-kubernetes-test/scripts/cp4a-post-install.sh --console
-/usr/install/cert-kubernetes-test/scripts/cp4a-post-install.sh --probe # Y to continue
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --precheck
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --status
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --console
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --probe # Y to continue
 ```
 
 ### Next steps
@@ -2346,7 +2442,8 @@ stringData:
 
 # Configure Workflow Runtime to trust Workflow Authoring TLS
 yq -i '.spec.baw_configuration[0].tls = {"tls_trust_list": ["baw-tls-zen-secret", "baw-routerca-secret"]}' \
-/usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 
 # Get apps endpoint of your openshift
 apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-dev -o jsonpath='{.spec.domain}'`
@@ -2356,13 +2453,15 @@ echo $apps_endpoint
 yq -i '.spec.baw_configuration[0].workflow_center = '\
 '{"url": "https://cpd-cp4ba-dev.'$apps_endpoint'/bas/ProcessCenter", '\
 '"secret_name": "ibm-baw-wc-secret", "heartbeat_interval": 30}' \
-/usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 ```bash
 # Configure Workflow Authoring to trust Workflow Runtime TLS
 yq -i '.spec.workflow_authoring_configuration.tls = {"tls_trust_list": '\
 '["bawaut-tls-zen-secret", "bawaut-tls-cs-secret", "bawaut-routerca-secret"]}' \
-/usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 
 # Get apps endpoint of your openshift
 apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-test -o jsonpath='{.spec.domain}'`
@@ -2374,14 +2473,17 @@ yq -i '.spec.workflow_authoring_configuration.environment_config = '\
 '"https://cpd-cp4ba-test.'$apps_endpoint',https://cp-console-cp4ba-test.'$apps_endpoint'",'\
 '"referer_allowlist":'\
 '"cpd-cp4ba-test.'$apps_endpoint',cp-console-cp4ba-test.'$apps_endpoint'"}}' \
-/usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 ```bash
 # Apply updated cp4ba-dev CR
-oc apply -n cp4ba-dev -f /usr/install/cert-kubernetes-dev/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+oc apply -n cp4ba-dev -f /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 
 # Apply updated cp4ba-test CR
-oc apply -n cp4ba-test -f /usr/install/cert-kubernetes-test/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+oc apply -n cp4ba-test -f /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
 Now you need to wait for next Operator cycle to propagate the changes from CR to BAW pods in both dev and test environment.
