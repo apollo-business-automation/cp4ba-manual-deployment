@@ -710,11 +710,11 @@ mkdir /usr/install/cp4ba-dev
 
 # Download the package
 curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
-ibm-cp-automation/5.0.0/ibm-cp-automation-5.0.0.tgz \
---output /usr/install/cp4ba-dev/ibm-cp-automation-5.0.0.tgz
+ibm-cp-automation/5.0.1/ibm-cp-automation-5.0.1.tgz \
+--output /usr/install/cp4ba-dev/ibm-cp-automation-5.0.1.tgz
 
 # Extract the package
-tar xzvf /usr/install/cp4ba-dev/ibm-cp-automation-5.0.0.tgz -C /usr/install/cp4ba-dev/
+tar xzvf /usr/install/cp4ba-dev/ibm-cp-automation-5.0.1.tgz -C /usr/install/cp4ba-dev/
 
 # Extract cert-kubernetes
 tar xvf /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
@@ -1553,11 +1553,11 @@ mkdir /usr/install/cp4ba-test
 
 # Download the package
 curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
-ibm-cp-automation/5.0.0/ibm-cp-automation-5.0.0.tgz \
---output /usr/install/cp4ba-test/ibm-cp-automation-5.0.0.tgz
+ibm-cp-automation/5.0.1/ibm-cp-automation-5.0.1.tgz \
+--output /usr/install/cp4ba-test/ibm-cp-automation-5.0.1.tgz
 
 # Extract the package
-tar xzvf /usr/install/cp4ba-test/ibm-cp-automation-5.0.0.tgz -C /usr/install/cp4ba-test/
+tar xzvf /usr/install/cp4ba-test/ibm-cp-automation-5.0.1.tgz -C /usr/install/cp4ba-test/
 
 # Extract cert-kubernetes
 tar xvf /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
