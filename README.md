@@ -1,6 +1,6 @@
 # Cloud Pak for Business Automation Production deployment manual installation ✍️<!-- omit in toc -->
 
-For version 23.0.1
+For version 23.0.1 iFix 1
 
 Installs BAW and FNCM environment.
 
@@ -727,19 +727,6 @@ cp4aOperatorSdk/files/deploy/crs/
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=cluster-setting-up-by-running-script
 
-```bash
-/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/scripts/\
-cpfs/installer_scripts/cp3pt0-deployment/setup_singleton.sh --enable-licensing --license-accept
-```
-
-Wait for the command to complete ending with
-```text
-[✔] ibmlicensing instance present
-ibmlicensing.operator.ibm.com/instance patched
-[INFO] License accepted for ibmlicensing instance.
-```
-
 Initiate cluster admin setup
 ```bash
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
@@ -1019,9 +1006,11 @@ Update values for cp4ba_db_server.property
 ```bash
 # Backup generated file
 cp /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property \
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+\cp4ba-prerequisites/propertyfile/cp4ba_db_server.property \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property.bak
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+cp4ba-prerequisites/propertyfile/cp4ba_db_server.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -1031,16 +1020,19 @@ sed -i \
 -e 's/postgresql.DATABASE_SSL_ENABLE="True"/postgresql.DATABASE_SSL_ENABLE="False"/g' \
 -e 's/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="True"/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="False"/g' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/\
+scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property
 ```
 
 Update values for cp4ba_db_name_user.property
 ```bash
 # Backup generated file
 cp /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property \
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
 ```
 
 ```bash
@@ -1079,16 +1071,19 @@ sed -i \
 -e 's/postgresql.STUDIO_DB_USER_NAME="<youruser1>"/postgresql.STUDIO_DB_USER_NAME="devbas"/g' \
 -e 's/postgresql.STUDIO_DB_USER_PASSWORD="<yourpassword>"/postgresql.STUDIO_DB_USER_PASSWORD="Password"/g' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/\
+scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
 ```
 
 Update values for cp4ba_LDAP.property
 ```bash
 # Backup generated file
 cp /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property \
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/\
+scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property.bak
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/\
+scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -1103,16 +1098,19 @@ sed -i \
 -e 's/LDAP_GROUP_BASE_DN="<Required>"/LDAP_GROUP_BASE_DN="ou=Groups,dc=cp,dc=internal"/g' \
 -e 's/LC_USER_FILTER="(\&(cn=%v)(objectclass=person))"/LC_USER_FILTER="(\&(uid=%v)(objectclass=inetOrgPerson))"/g' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/\
+scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property
 ```
 
 Update values for cp4ba_user_profile.property
 ```bash
 # Backup generated file
 cp /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property \
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/\
+scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property.bak
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/\
+scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -1144,7 +1142,8 @@ sed -i \
 -e 's/APP_ENGINE.ADMIN_USER="<Required>"/APP_ENGINE.ADMIN_USER="cpadmin"/g' \
 -e 's/BASTUDIO.ADMIN_USER="<Required>"/BASTUDIO.ADMIN_USER="cpadmin"/g' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/\
+scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property
 ```
 
 ### Generate, update and apply SQL and Secret files
@@ -1841,9 +1840,11 @@ Update values for cp4ba_db_server.property
 ```bash
 # Backup generated file
 cp /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property \
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+cp4ba-prerequisites/propertyfile/cp4ba_db_server.property \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property.bak
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+cp4ba-prerequisites/propertyfile/cp4ba_db_server.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -1853,16 +1854,19 @@ sed -i \
 -e 's/postgresql.DATABASE_SSL_ENABLE="True"/postgresql.DATABASE_SSL_ENABLE="False"/g' \
 -e 's/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="True"/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="False"/g' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+cp4ba-prerequisites/propertyfile/cp4ba_db_server.property
 ```
 
 Update values for cp4ba_db_name_user.property
 ```bash
 # Backup generated file
 cp /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property \
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
 ```
 
 ```bash
@@ -1885,7 +1889,8 @@ sed -i \
 -e 's/postgresql.BAWTOS_DB_USER_NAME="<youruser1>"/postgresql.BAWTOS_DB_USER_NAME="testbawtos"/g' \
 -e 's/postgresql.BAWTOS_DB_USER_PASSWORD="<yourpassword>"/postgresql.BAWTOS_DB_USER_PASSWORD="Password"/g' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
 ```
 
 ```bash
@@ -1909,16 +1914,19 @@ sed -i \
 -e 's/postgresql.BAW_RUNTIME_DB_USER_PASSWORD="<yourpassword>"/'\
 'postgresql.BAW_RUNTIME_DB_USER_PASSWORD="Password"/g' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
 ```
 
 Update values for cp4ba_LDAP.property
 ```bash
 # Backup generated file
 cp /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property \
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property.bak
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -1933,16 +1941,19 @@ sed -i \
 -e 's/LDAP_GROUP_BASE_DN="<Required>"/LDAP_GROUP_BASE_DN="ou=Groups,dc=cp,dc=internal"/g' \
 -e 's/LC_USER_FILTER="(\&(cn=%v)(objectclass=person))"/LC_USER_FILTER="(\&(uid=%v)(objectclass=inetOrgPerson))"/g' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property
 ```
 
 Update values for cp4ba_user_profile.property
 ```bash
 # Backup generated file
 cp /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property \
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property.bak
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property.bak
 
 # Update generated file with real values
 sed -i \
@@ -1974,7 +1985,8 @@ sed -i \
 -e 's/APP_ENGINE.ADMIN_USER="<Required>"/APP_ENGINE.ADMIN_USER="cpadmin"/g' \
 -e 's/BAW_RUNTIME.ADMIN_USER="<Required>"/BAW_RUNTIME.ADMIN_USER="cpadmin"/g' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
+cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property
 ```
 
 ### Generate, update and apply SQL and Secret files
