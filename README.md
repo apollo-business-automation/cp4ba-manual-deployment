@@ -1070,9 +1070,8 @@ sed -i \
 -e 's/postgresql.STUDIO_DB_NAME="BASDB"/postgresql.STUDIO_DB_NAME="DEVBAS"/g' \
 -e 's/postgresql.STUDIO_DB_USER_NAME="<youruser1>"/postgresql.STUDIO_DB_USER_NAME="devbas"/g' \
 -e 's/postgresql.STUDIO_DB_USER_PASSWORD="<yourpassword>"/postgresql.STUDIO_DB_USER_PASSWORD="Password"/g' \
-/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/\
-scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/\
+cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
 ```
 
 Update values for cp4ba_LDAP.property
@@ -1913,9 +1912,8 @@ sed -i \
 -e 's/postgresql.BAW_RUNTIME_DB_USER_NAME="<youruser1>"/postgresql.BAW_RUNTIME_DB_USER_NAME="testbaw"/g' \
 -e 's/postgresql.BAW_RUNTIME_DB_USER_PASSWORD="<yourpassword>"/'\
 'postgresql.BAW_RUNTIME_DB_USER_PASSWORD="Password"/g' \
-/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
-cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/\
+cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
 ```
 
 Update values for cp4ba_LDAP.property
