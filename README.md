@@ -1204,13 +1204,6 @@ oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
 --file=/usr/dbscript-dev/fncm/postgresql/postgresql/createDEVBAWTOS.sql'
-
-# BAW authoring CHOS
-oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/devchos; chown postgres:postgres /pgsqldata/devchos;'
-oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
---file=/usr/dbscript-dev/fncm/postgresql/postgresql/createDEVCHOS.sql'
 ```
 
 ```bash
@@ -1567,19 +1560,6 @@ cp4aOperatorSdk/files/deploy/crs/
 ### Setting up the cluster by running a script
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=cluster-setting-up-by-running-script
-
-```bash
-/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/scripts/\
-cpfs/installer_scripts/cp3pt0-deployment/setup_singleton.sh --enable-licensing --license-accept
-```
-
-Wait for the command to complete ending with
-```text
-[✔] ibmlicensing instance present
-ibmlicensing.operator.ibm.com/instance patched
-[INFO] License accepted for ibmlicensing instance.
-```
 
 Initiate cluster admin setup
 ```bash
@@ -2044,13 +2024,6 @@ oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
 --file=/usr/dbscript-test/fncm/postgresql/postgresql/createTESTBAWTOS.sql'
-
-# BAW runtime CHOS
-oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/testchos; chown postgres:postgres /pgsqldata/testchos;'
-oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
---file=/usr/dbscript-test/fncm/postgresql/postgresql/createTESTCHOS.sql'
 ```
 
 ```bash
