@@ -1024,10 +1024,12 @@ cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
 sed -i \
 -e 's/postgresql.GCD_DB_NAME="GCDDB"/postgresql.GCD_DB_NAME="DEVGCD"/g' \
 -e 's/postgresql.GCD_DB_USER_NAME="<youruser1>"/postgresql.GCD_DB_USER_NAME="devgcd"/g' \
--e 's/postgresql.GCD_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.GCD_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.GCD_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.GCD_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.OS1_DB_NAME="OS1DB"/postgresql.OS1_DB_NAME="DEVOS1"/g' \
 -e 's/postgresql.OS1_DB_USER_NAME="<youruser1>"/postgresql.OS1_DB_USER_NAME="devos1"/g' \
--e 's/postgresql.OS1_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.OS1_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.OS1_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.OS1_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOCS_DB_NAME="BAWDOCS"/postgresql.BAWDOCS_DB_NAME="DEVBAWDOCS"/g' \
 -e 's/postgresql.BAWDOCS_DB_USER_NAME="<youruser1>"/postgresql.BAWDOCS_DB_USER_NAME="devbawdocs"/g' \
 -e 's/postgresql.BAWDOCS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
@@ -1057,7 +1059,8 @@ sed -i \
 'postgresql.AEOS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.ICN_DB_NAME="ICNDB"/postgresql.ICN_DB_NAME="DEVICN"/g' \
 -e 's/postgresql.ICN_DB_USER_NAME="<youruser1>"/postgresql.ICN_DB_USER_NAME="devicn"/g' \
--e 's/postgresql.ICN_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.ICN_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.ICN_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.ICN_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.APP_ENGINE_DB_NAME="AAEDB"/postgresql.APP_ENGINE_DB_NAME="DEVAAE"/g' \
 -e 's/postgresql.APP_ENGINE_DB_USER_NAME="<youruser1>"/postgresql.APP_ENGINE_DB_USER_NAME="devaae"/g' \
 -e 's/postgresql.APP_ENGINE_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
@@ -1827,10 +1830,12 @@ cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
 sed -i \
 -e 's/postgresql.GCD_DB_NAME="GCDDB"/postgresql.GCD_DB_NAME="TESTGCD"/g' \
 -e 's/postgresql.GCD_DB_USER_NAME="<youruser1>"/postgresql.GCD_DB_USER_NAME="testgcd"/g' \
--e 's/postgresql.GCD_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.GCD_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.GCD_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.GCD_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.OS1_DB_NAME="OS1DB"/postgresql.OS1_DB_NAME="TESTOS1"/g' \
 -e 's/postgresql.OS1_DB_USER_NAME="<youruser1>"/postgresql.OS1_DB_USER_NAME="testos1"/g' \
--e 's/postgresql.OS1_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.OS1_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.OS1_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.OS1_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOCS_DB_NAME="BAWDOCS"/postgresql.BAWDOCS_DB_NAME="TESTBAWDOCS"/g' \
 -e 's/postgresql.BAWDOCS_DB_USER_NAME="<youruser1>"/postgresql.BAWDOCS_DB_USER_NAME="testbawdocs"/g' \
 -e 's/postgresql.BAWDOCS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
@@ -1861,7 +1866,8 @@ sed -i \
 'postgresql.AEOS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.ICN_DB_NAME="ICNDB"/postgresql.ICN_DB_NAME="TESTICN"/g' \
 -e 's/postgresql.ICN_DB_USER_NAME="<youruser1>"/postgresql.ICN_DB_USER_NAME="testicn"/g' \
--e 's/postgresql.ICN_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.ICN_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.ICN_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.ICN_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.APP_ENGINE_DB_NAME="AAEDB"/postgresql.APP_ENGINE_DB_NAME="TESTAAE"/g' \
 -e 's/postgresql.APP_ENGINE_DB_USER_NAME="<youruser1>"/postgresql.APP_ENGINE_DB_USER_NAME="testaae"/g' \
 -e 's/postgresql.APP_ENGINE_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
