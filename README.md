@@ -1,6 +1,6 @@
 # Cloud Pak for Business Automation Production deployment manual installation ✍️<!-- omit in toc -->
 
-For version 23.0.1 iFix 1
+For version 23.0.1 iFix 5
 
 Installs BAW and FNCM environment.
 
@@ -17,7 +17,6 @@ Installs BAW and FNCM environment.
 - [Cloud Pak for Business Automation Development Environment](#cloud-pak-for-business-automation-development-environment)
   - [Preparing a client to connect to the cluster](#preparing-a-client-to-connect-to-the-cluster-1)
   - [Setting up the cluster by running a script](#setting-up-the-cluster-by-running-a-script)
-  - [Customize CPFS before deployment](#customize-cpfs-before-deployment)
   - [Prepare property files](#prepare-property-files)
   - [Generate, update and apply SQL and Secret files](#generate-update-and-apply-sql-and-secret-files)
   - [Validate connectivity](#validate-connectivity)
@@ -31,7 +30,6 @@ Installs BAW and FNCM environment.
 - [Cloud Pak for Business Automation Test Environment](#cloud-pak-for-business-automation-test-environment)
   - [Preparing a client to connect to the cluster](#preparing-a-client-to-connect-to-the-cluster-2)
   - [Setting up the cluster by running a script](#setting-up-the-cluster-by-running-a-script-1)
-  - [Customize CPFS before deployment](#customize-cpfs-before-deployment-1)
   - [Prepare property files](#prepare-property-files-1)
   - [Generate, update and apply SQL and Secret files](#generate-update-and-apply-sql-and-secret-files-1)
   - [Validate connectivity](#validate-connectivity-1)
@@ -694,7 +692,7 @@ oc get pod -n cp4ba-postgresql -w
 PostgreSQL
 - See Project cp4ba-postgresql, Service postgresql for assigned NodePort 
 - cpadmin / Password
-- In PostgreSQL Pod terminal `psql postgresql://cpadmin:Password@localhost:5432/postgresdb`
+- In PostgreSQL Pod terminal `psql postgresql://cpadmin@localhost:5432/postgresdb`
 
 ## Cloud Pak for Business Automation Development Environment
 
@@ -710,11 +708,11 @@ mkdir /usr/install/cp4ba-dev
 
 # Download the package
 curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
-ibm-cp-automation/5.0.1/ibm-cp-automation-5.0.1.tgz \
---output /usr/install/cp4ba-dev/ibm-cp-automation-5.0.1.tgz
+ibm-cp-automation/5.0.5+20231124.001758/ibm-cp-automation-5.0.5+20231124.001758.tgz \
+--output /usr/install/cp4ba-dev/ibm-cp-automation-5.0.5+20231124.001758.tgz
 
 # Extract the package
-tar xzvf /usr/install/cp4ba-dev/ibm-cp-automation-5.0.1.tgz -C /usr/install/cp4ba-dev/
+tar xzvf /usr/install/cp4ba-dev/ibm-cp-automation-5.0.5+20231124.001758.tgz -C /usr/install/cp4ba-dev/
 
 # Extract cert-kubernetes
 tar xvf /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
@@ -734,6 +732,14 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-clusteradmin-setup
 ```
 
 ```text
+[INFO] Applying the latest IBM CP4BA Operator catalog source...
+
+[✔] IBM CP4BA Operator catalog source Updated!
+
+
+[INFO] Starting to install IBM Cert Manager and IBM Licensing Operator ...
+...Omitted lots of content about the installations
+
 Select the cloud platform to deploy: 
 1) RedHat OpenShift Kubernetes Service (ROKS) - Public Cloud
 2) Openshift Container Platform (OCP) - Private Cloud
@@ -744,8 +750,6 @@ What type of deployment is being performed?
 1) Starter
 2) Production
 Enter a valid option [1 to 2]: 2
-
-Do you want CP4BA Operator support 'All Namespaces'? (Yes/No, default: No) No
 
 Where do you want to deploy Cloud Pak for Business Automation?
 Enter the name for a new project or an existing project (namespace): cp4ba-dev
@@ -828,26 +832,6 @@ Wait until the script finishes.
 Wait until all Operators in Project cp4ba-dev are in *Succeeded* state.
 ```bash
 oc get csv -n cp4ba-dev -w
-```
-
-### Customize CPFS before deployment
-
-TODO remove when fixed
-
-Based on https://www.ibm.com/docs/en/cloud-paks/foundational-services/4.0?topic=options-configuring-foundational-services
-
-Prepare services configurations
-```bash
-oc patch -n cp4ba-dev CommonService common-service --type=json \
--p '[{"op": "add", "path": "/spec/services", "value":[]}]'
-```
-
-Change mongodb storage class
-```bash
-oc patch -n cp4ba-dev CommonService common-service --type=json \
--p '[{"op": "add", "path": "/spec/services/-",'\
-'"value":{"name":"ibm-im-mongodb-operator",'\
-'"spec":{"mongoDB": {"storageClass":"ocs-storagecluster-ceph-rbd"}}}}]'
 ```
 
 ### Prepare property files
@@ -1040,36 +1024,51 @@ cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
 sed -i \
 -e 's/postgresql.GCD_DB_NAME="GCDDB"/postgresql.GCD_DB_NAME="DEVGCD"/g' \
 -e 's/postgresql.GCD_DB_USER_NAME="<youruser1>"/postgresql.GCD_DB_USER_NAME="devgcd"/g' \
--e 's/postgresql.GCD_DB_USER_PASSWORD="<yourpassword>"/postgresql.GCD_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.GCD_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.GCD_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.OS1_DB_NAME="OS1DB"/postgresql.OS1_DB_NAME="DEVOS1"/g' \
 -e 's/postgresql.OS1_DB_USER_NAME="<youruser1>"/postgresql.OS1_DB_USER_NAME="devos1"/g' \
--e 's/postgresql.OS1_DB_USER_PASSWORD="<yourpassword>"/postgresql.OS1_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.OS1_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.OS1_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOCS_DB_NAME="BAWDOCS"/postgresql.BAWDOCS_DB_NAME="DEVBAWDOCS"/g' \
 -e 's/postgresql.BAWDOCS_DB_USER_NAME="<youruser1>"/postgresql.BAWDOCS_DB_USER_NAME="devbawdocs"/g' \
--e 's/postgresql.BAWDOCS_DB_USER_PASSWORD="<yourpassword>"/'\
+-e 's/postgresql.BAWDOCS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.BAWDOCS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOS_DB_NAME="BAWDOS"/postgresql.BAWDOS_DB_NAME="DEVBAWDOS"/g' \
 -e 's/postgresql.BAWDOS_DB_USER_NAME="<youruser1>"/postgresql.BAWDOS_DB_USER_NAME="devbawdos"/g' \
--e 's/postgresql.BAWDOS_DB_USER_PASSWORD="<yourpassword>"/postgresql.BAWDOS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.BAWDOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.BAWDOS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWTOS_DB_NAME="BAWTOS"/postgresql.BAWTOS_DB_NAME="DEVBAWTOS"/g' \
 -e 's/postgresql.BAWTOS_DB_USER_NAME="<youruser1>"/postgresql.BAWTOS_DB_USER_NAME="devbawtos"/g' \
--e 's/postgresql.BAWTOS_DB_USER_PASSWORD="<yourpassword>"/postgresql.BAWTOS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.BAWTOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.BAWTOS_DB_USER_PASSWORD="Password"/g' \
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/\
+cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
+```
+
+```bash
+# Update generated file with real values
+sed -i \
 -e 's/postgresql.CHOS_DB_NAME="CHOS"/postgresql.CHOS_DB_NAME="DEVCHOS"/g' \
 -e 's/postgresql.CHOS_DB_USER_NAME="<youruser1>"/postgresql.CHOS_DB_USER_NAME="devchos"/g' \
--e 's/postgresql.CHOS_DB_USER_PASSWORD="<yourpassword>"/postgresql.CHOS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.CHOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.CHOS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.AEOS_DB_NAME="AEOS"/postgresql.AEOS_DB_NAME="DEVAEOS"/g' \
 -e 's/postgresql.AEOS_DB_USER_NAME="<youruser1>"/postgresql.AEOS_DB_USER_NAME="devaeos"/g' \
--e 's/postgresql.AEOS_DB_USER_PASSWORD="<yourpassword>"/postgresql.AEOS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.AEOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.AEOS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.ICN_DB_NAME="ICNDB"/postgresql.ICN_DB_NAME="DEVICN"/g' \
 -e 's/postgresql.ICN_DB_USER_NAME="<youruser1>"/postgresql.ICN_DB_USER_NAME="devicn"/g' \
--e 's/postgresql.ICN_DB_USER_PASSWORD="<yourpassword>"/postgresql.ICN_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.ICN_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.ICN_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.APP_ENGINE_DB_NAME="AAEDB"/postgresql.APP_ENGINE_DB_NAME="DEVAAE"/g' \
 -e 's/postgresql.APP_ENGINE_DB_USER_NAME="<youruser1>"/postgresql.APP_ENGINE_DB_USER_NAME="devaae"/g' \
--e 's/postgresql.APP_ENGINE_DB_USER_PASSWORD="<yourpassword>"/'\
+-e 's/postgresql.APP_ENGINE_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.APP_ENGINE_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.STUDIO_DB_NAME="BASDB"/postgresql.STUDIO_DB_NAME="DEVBAS"/g' \
 -e 's/postgresql.STUDIO_DB_USER_NAME="<youruser1>"/postgresql.STUDIO_DB_USER_NAME="devbas"/g' \
--e 's/postgresql.STUDIO_DB_USER_PASSWORD="<yourpassword>"/postgresql.STUDIO_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.STUDIO_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.STUDIO_DB_USER_PASSWORD="Password"/g' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/\
 cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
 ```
@@ -1091,7 +1090,7 @@ sed -i \
 -e 's/LDAP_PORT="<Required>"/LDAP_PORT="389"/g' \
 -e 's/LDAP_BASE_DN="<Required>"/LDAP_BASE_DN="dc=cp,dc=internal"/g' \
 -e 's/LDAP_BIND_DN="<Required>"/LDAP_BIND_DN="cn=admin,dc=cp,dc=internal"/g' \
--e 's/LDAP_BIND_DN_PASSWORD="<Required>"/LDAP_BIND_DN_PASSWORD="Password"/g' \
+-e 's/LDAP_BIND_DN_PASSWORD="{Base64}<Required>"/LDAP_BIND_DN_PASSWORD="Password"/g' \
 -e 's/LDAP_SSL_ENABLED="True"/LDAP_SSL_ENABLED="False"/g' \
 -e 's/LDAP_USER_NAME_ATTRIBUTE="\*:uid"/LDAP_USER_NAME_ATTRIBUTE="*:cn"/g' \
 -e 's/LDAP_GROUP_BASE_DN="<Required>"/LDAP_GROUP_BASE_DN="ou=Groups,dc=cp,dc=internal"/g' \
@@ -1117,9 +1116,9 @@ sed -i \
 -e 's/CP4BA.FNCM_LICENSE="<Required>"/CP4BA.FNCM_LICENSE="non-production"/g' \
 -e 's/CP4BA.BAW_LICENSE="<Required>"/CP4BA.BAW_LICENSE="non-production"/g' \
 -e 's/CONTENT.APPLOGIN_USER="<Required>"/CONTENT.APPLOGIN_USER="cpadmin"/g' \
--e 's/CONTENT.APPLOGIN_PASSWORD="<Required>"/CONTENT.APPLOGIN_PASSWORD="Password"/g' \
--e 's/CONTENT.LTPA_PASSWORD="<Required>"/CONTENT.LTPA_PASSWORD="Password"/g' \
--e 's/CONTENT.KEYSTORE_PASSWORD="<Required>"/CONTENT.KEYSTORE_PASSWORD="Password"/g' \
+-e 's/CONTENT.APPLOGIN_PASSWORD="{Base64}<Required>"/CONTENT.APPLOGIN_PASSWORD="Password"/g' \
+-e 's/CONTENT.LTPA_PASSWORD="{Base64}<Required>"/CONTENT.LTPA_PASSWORD="Password"/g' \
+-e 's/CONTENT.KEYSTORE_PASSWORD="{Base64}<Required>"/CONTENT.KEYSTORE_PASSWORD="Password"/g' \
 -e 's/CONTENT_INITIALIZATION.LDAP_ADMIN_USER_NAME="<Required>"/'\
 'CONTENT_INITIALIZATION.LDAP_ADMIN_USER_NAME="cpadmin"/g' \
 -e 's/CONTENT_INITIALIZATION.LDAP_ADMINS_GROUPS_NAME="<Required>"/'\
@@ -1135,9 +1134,9 @@ sed -i \
 -e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_PE_CONN_POINT_NAME="<Required>"/'\
 'CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_PE_CONN_POINT_NAME="pe_conn_bawtos"/g' \
 -e 's/BAN.APPLOGIN_USER="<Required>"/BAN.APPLOGIN_USER="cpadmin"/g' \
--e 's/BAN.APPLOGIN_PASSWORD="<Required>"/BAN.APPLOGIN_PASSWORD="Password"/g' \
--e 's/BAN.LTPA_PASSWORD="<Required>"/BAN.LTPA_PASSWORD="Password"/g' \
--e 's/BAN.KEYSTORE_PASSWORD="<Required>"/BAN.KEYSTORE_PASSWORD="Password"/g' \
+-e 's/BAN.APPLOGIN_PASSWORD="{Base64}<Required>"/BAN.APPLOGIN_PASSWORD="Password"/g' \
+-e 's/BAN.LTPA_PASSWORD="{Base64}<Required>"/BAN.LTPA_PASSWORD="Password"/g' \
+-e 's/BAN.KEYSTORE_PASSWORD="{Base64}<Required>"/BAN.KEYSTORE_PASSWORD="Password"/g' \
 -e 's/APP_ENGINE.ADMIN_USER="<Required>"/APP_ENGINE.ADMIN_USER="cpadmin"/g' \
 -e 's/BASTUDIO.ADMIN_USER="<Required>"/BASTUDIO.ADMIN_USER="cpadmin"/g' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
@@ -1176,33 +1175,33 @@ Execute create scripts with table space directory creation
 ```bash
 # Application engine
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-dev/ae/postgresql/postgresql/create_app_engine_db.sql'
 
 # Studio
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-dev/bas/postgresql/postgresql/create_bas_studio_db.sql'
 
 # BAW authoring DOCS
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/devbawdocs; chown postgres:postgres /pgsqldata/devbawdocs;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-dev/fncm/postgresql/postgresql/createDEVBAWDOCS.sql'
 
 # BAW authoring DOS
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/devbawdos; chown postgres:postgres /pgsqldata/devbawdos;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-dev/fncm/postgresql/postgresql/createDEVBAWDOS.sql'
 
 # BAW authoring TOS
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/devbawtos; chown postgres:postgres /pgsqldata/devbawtos;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-dev/fncm/postgresql/postgresql/createDEVBAWTOS.sql'
 ```
 
@@ -1211,28 +1210,28 @@ oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/devicn; chown postgres:postgres /pgsqldata/devicn;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-dev/ban/postgresql/postgresql/createICNDB.sql'
 
 # FNCM OS1
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/devos1; chown postgres:postgres /pgsqldata/devos1;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-dev/fncm/postgresql/postgresql/createOS1DB.sql'
 
 # FNCM AEOS
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/devaeos; chown postgres:postgres /pgsqldata/devaeos;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-dev/fncm/postgresql/postgresql/createDEVAEOS.sql'
 
 # FNCM GCD
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/devgcd; chown postgres:postgres /pgsqldata/devgcd;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-dev/fncm/postgresql/postgresql/createGCDDB.sql'
 ```
 
@@ -1544,11 +1543,11 @@ mkdir /usr/install/cp4ba-test
 
 # Download the package
 curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
-ibm-cp-automation/5.0.1/ibm-cp-automation-5.0.1.tgz \
---output /usr/install/cp4ba-test/ibm-cp-automation-5.0.1.tgz
+ibm-cp-automation/5.0.5+20231124.001758/ibm-cp-automation-5.0.5+20231124.001758.tgz \
+--output /usr/install/cp4ba-test/ibm-cp-automation-5.0.5+20231124.001758.tgz
 
 # Extract the package
-tar xzvf /usr/install/cp4ba-test/ibm-cp-automation-5.0.1.tgz -C /usr/install/cp4ba-test/
+tar xzvf /usr/install/cp4ba-test/ibm-cp-automation-5.0.5+20231124.001758.tgz -C /usr/install/cp4ba-test/
 
 # Extract cert-kubernetes
 tar xvf /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
@@ -1578,8 +1577,6 @@ What type of deployment is being performed?
 1) Starter
 2) Production
 Enter a valid option [1 to 2]: 2
-
-Do you want CP4BA Operator support 'All Namespaces'? (Yes/No, default: No) No
 
 Where do you want to deploy Cloud Pak for Business Automation?
 Enter the name for a new project or an existing project (namespace): cp4ba-test
@@ -1664,26 +1661,6 @@ Wait until the script finishes.
 Wait until all Operators in Project cp4ba-test are in *Succeeded* state.
 ```bash
 oc get csv -n cp4ba-test -w
-```
-
-### Customize CPFS before deployment
-
-TODO remove when fixed
-
-Based on https://www.ibm.com/docs/en/cloud-paks/foundational-services/4.0?topic=options-configuring-foundational-services
-
-Prepare services configurations
-```bash
-oc patch -n cp4ba-test CommonService common-service --type=json \
--p '[{"op": "add", "path": "/spec/services", "value":[]}]'
-```
-
-Change mongodb storage class
-```bash
-oc patch -n cp4ba-test CommonService common-service --type=json \
--p '[{"op": "add", "path": "/spec/services/-",'\
-'"value":{"name":"ibm-im-mongodb-operator",'\
-'"spec":{"mongoDB": {"storageClass":"ocs-storagecluster-ceph-rbd"}}}}]'
 ```
 
 ### Prepare property files
@@ -1853,20 +1830,24 @@ cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
 sed -i \
 -e 's/postgresql.GCD_DB_NAME="GCDDB"/postgresql.GCD_DB_NAME="TESTGCD"/g' \
 -e 's/postgresql.GCD_DB_USER_NAME="<youruser1>"/postgresql.GCD_DB_USER_NAME="testgcd"/g' \
--e 's/postgresql.GCD_DB_USER_PASSWORD="<yourpassword>"/postgresql.GCD_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.GCD_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.GCD_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.OS1_DB_NAME="OS1DB"/postgresql.OS1_DB_NAME="TESTOS1"/g' \
 -e 's/postgresql.OS1_DB_USER_NAME="<youruser1>"/postgresql.OS1_DB_USER_NAME="testos1"/g' \
--e 's/postgresql.OS1_DB_USER_PASSWORD="<yourpassword>"/postgresql.OS1_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.OS1_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.OS1_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOCS_DB_NAME="BAWDOCS"/postgresql.BAWDOCS_DB_NAME="TESTBAWDOCS"/g' \
 -e 's/postgresql.BAWDOCS_DB_USER_NAME="<youruser1>"/postgresql.BAWDOCS_DB_USER_NAME="testbawdocs"/g' \
--e 's/postgresql.BAWDOCS_DB_USER_PASSWORD="<yourpassword>"/'\
+-e 's/postgresql.BAWDOCS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.BAWDOCS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOS_DB_NAME="BAWDOS"/postgresql.BAWDOS_DB_NAME="TESTBAWDOS"/g' \
 -e 's/postgresql.BAWDOS_DB_USER_NAME="<youruser1>"/postgresql.BAWDOS_DB_USER_NAME="testbawdos"/g' \
--e 's/postgresql.BAWDOS_DB_USER_PASSWORD="<yourpassword>"/postgresql.BAWDOS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.BAWDOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.BAWDOS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWTOS_DB_NAME="BAWTOS"/postgresql.BAWTOS_DB_NAME="TESTBAWTOS"/g' \
 -e 's/postgresql.BAWTOS_DB_USER_NAME="<youruser1>"/postgresql.BAWTOS_DB_USER_NAME="testbawtos"/g' \
--e 's/postgresql.BAWTOS_DB_USER_PASSWORD="<yourpassword>"/postgresql.BAWTOS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.BAWTOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.BAWTOS_DB_USER_PASSWORD="Password"/g' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
 cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
@@ -1877,20 +1858,23 @@ cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
 sed -i \
 -e 's/postgresql.CHOS_DB_NAME="CHOS"/postgresql.CHOS_DB_NAME="TESTCHOS"/g' \
 -e 's/postgresql.CHOS_DB_USER_NAME="<youruser1>"/postgresql.CHOS_DB_USER_NAME="testchos"/g' \
--e 's/postgresql.CHOS_DB_USER_PASSWORD="<yourpassword>"/postgresql.CHOS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.CHOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.CHOS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.AEOS_DB_NAME="AEOS"/postgresql.AEOS_DB_NAME="TESTAEOS"/g' \
 -e 's/postgresql.AEOS_DB_USER_NAME="<youruser1>"/postgresql.AEOS_DB_USER_NAME="testaeos"/g' \
--e 's/postgresql.AEOS_DB_USER_PASSWORD="<yourpassword>"/postgresql.AEOS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.AEOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.AEOS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.ICN_DB_NAME="ICNDB"/postgresql.ICN_DB_NAME="TESTICN"/g' \
 -e 's/postgresql.ICN_DB_USER_NAME="<youruser1>"/postgresql.ICN_DB_USER_NAME="testicn"/g' \
--e 's/postgresql.ICN_DB_USER_PASSWORD="<yourpassword>"/postgresql.ICN_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.ICN_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.ICN_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.APP_ENGINE_DB_NAME="AAEDB"/postgresql.APP_ENGINE_DB_NAME="TESTAAE"/g' \
 -e 's/postgresql.APP_ENGINE_DB_USER_NAME="<youruser1>"/postgresql.APP_ENGINE_DB_USER_NAME="testaae"/g' \
--e 's/postgresql.APP_ENGINE_DB_USER_PASSWORD="<yourpassword>"/'\
+-e 's/postgresql.APP_ENGINE_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.APP_ENGINE_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAW_RUNTIME_DB_NAME="BAWDB"/postgresql.BAW_RUNTIME_DB_NAME="TESTBAW"/g' \
 -e 's/postgresql.BAW_RUNTIME_DB_USER_NAME="<youruser1>"/postgresql.BAW_RUNTIME_DB_USER_NAME="testbaw"/g' \
--e 's/postgresql.BAW_RUNTIME_DB_USER_PASSWORD="<yourpassword>"/'\
+-e 's/postgresql.BAW_RUNTIME_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.BAW_RUNTIME_DB_USER_PASSWORD="Password"/g' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/\
 cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
@@ -1913,7 +1897,7 @@ sed -i \
 -e 's/LDAP_PORT="<Required>"/LDAP_PORT="389"/g' \
 -e 's/LDAP_BASE_DN="<Required>"/LDAP_BASE_DN="dc=cp,dc=internal"/g' \
 -e 's/LDAP_BIND_DN="<Required>"/LDAP_BIND_DN="cn=admin,dc=cp,dc=internal"/g' \
--e 's/LDAP_BIND_DN_PASSWORD="<Required>"/LDAP_BIND_DN_PASSWORD="Password"/g' \
+-e 's/LDAP_BIND_DN_PASSWORD="{Base64}<Required>"/LDAP_BIND_DN_PASSWORD="Password"/g' \
 -e 's/LDAP_SSL_ENABLED="True"/LDAP_SSL_ENABLED="False"/g' \
 -e 's/LDAP_USER_NAME_ATTRIBUTE="\*:uid"/LDAP_USER_NAME_ATTRIBUTE="*:cn"/g' \
 -e 's/LDAP_GROUP_BASE_DN="<Required>"/LDAP_GROUP_BASE_DN="ou=Groups,dc=cp,dc=internal"/g' \
@@ -1939,9 +1923,9 @@ sed -i \
 -e 's/CP4BA.FNCM_LICENSE="<Required>"/CP4BA.FNCM_LICENSE="non-production"/g' \
 -e 's/CP4BA.BAW_LICENSE="<Required>"/CP4BA.BAW_LICENSE="non-production"/g' \
 -e 's/CONTENT.APPLOGIN_USER="<Required>"/CONTENT.APPLOGIN_USER="cpadmin"/g' \
--e 's/CONTENT.APPLOGIN_PASSWORD="<Required>"/CONTENT.APPLOGIN_PASSWORD="Password"/g' \
--e 's/CONTENT.LTPA_PASSWORD="<Required>"/CONTENT.LTPA_PASSWORD="Password"/g' \
--e 's/CONTENT.KEYSTORE_PASSWORD="<Required>"/CONTENT.KEYSTORE_PASSWORD="Password"/g' \
+-e 's/CONTENT.APPLOGIN_PASSWORD="{Base64}<Required>"/CONTENT.APPLOGIN_PASSWORD="Password"/g' \
+-e 's/CONTENT.LTPA_PASSWORD="{Base64}<Required>"/CONTENT.LTPA_PASSWORD="Password"/g' \
+-e 's/CONTENT.KEYSTORE_PASSWORD="{Base64}<Required>"/CONTENT.KEYSTORE_PASSWORD="Password"/g' \
 -e 's/CONTENT_INITIALIZATION.LDAP_ADMIN_USER_NAME="<Required>"/'\
 'CONTENT_INITIALIZATION.LDAP_ADMIN_USER_NAME="cpadmin"/g' \
 -e 's/CONTENT_INITIALIZATION.LDAP_ADMINS_GROUPS_NAME="<Required>"/'\
@@ -1957,9 +1941,9 @@ sed -i \
 -e 's/CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_PE_CONN_POINT_NAME="<Required>"/'\
 'CONTENT_INITIALIZATION.CPE_OBJ_STORE_WORKFLOW_PE_CONN_POINT_NAME="pe_conn_bawtos"/g' \
 -e 's/BAN.APPLOGIN_USER="<Required>"/BAN.APPLOGIN_USER="cpadmin"/g' \
--e 's/BAN.APPLOGIN_PASSWORD="<Required>"/BAN.APPLOGIN_PASSWORD="Password"/g' \
--e 's/BAN.LTPA_PASSWORD="<Required>"/BAN.LTPA_PASSWORD="Password"/g' \
--e 's/BAN.KEYSTORE_PASSWORD="<Required>"/BAN.KEYSTORE_PASSWORD="Password"/g' \
+-e 's/BAN.APPLOGIN_PASSWORD="{Base64}<Required>"/BAN.APPLOGIN_PASSWORD="Password"/g' \
+-e 's/BAN.LTPA_PASSWORD="{Base64}<Required>"/BAN.LTPA_PASSWORD="Password"/g' \
+-e 's/BAN.KEYSTORE_PASSWORD="{Base64}<Required>"/BAN.KEYSTORE_PASSWORD="Password"/g' \
 -e 's/APP_ENGINE.ADMIN_USER="<Required>"/APP_ENGINE.ADMIN_USER="cpadmin"/g' \
 -e 's/BAW_RUNTIME.ADMIN_USER="<Required>"/BAW_RUNTIME.ADMIN_USER="cpadmin"/g' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
@@ -1996,33 +1980,33 @@ Execute create scripts with table space directory creation
 ```bash
 # Application engine
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-test/ae/postgresql/postgresql/create_app_engine_db.sql'
 
 # BAW runtime
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-test/baw-aws/postgresql/postgresql/create_baw_db_instance1_for_baw.sql'
 
 # BAW runtime DOCS
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/testbawdocs; chown postgres:postgres /pgsqldata/testbawdocs;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-test/fncm/postgresql/postgresql/createTESTBAWDOCS.sql'
 
 # BAW runtime DOS
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/testbawdos; chown postgres:postgres /pgsqldata/testbawdos;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-test/fncm/postgresql/postgresql/createTESTBAWDOS.sql'
 
 # BAW runtime TOS
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/testbawtos; chown postgres:postgres /pgsqldata/testbawtos;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-test/fncm/postgresql/postgresql/createTESTBAWTOS.sql'
 ```
 
@@ -2031,28 +2015,28 @@ oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/testicn; chown postgres:postgres /pgsqldata/testicn;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-test/ban/postgresql/postgresql/createICNDB.sql'
 
 # FNCM OS1
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/testos1; chown postgres:postgres /pgsqldata/testos1;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-test/fncm/postgresql/postgresql/createOS1DB.sql'
 
 # FNCM AEOS
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/testaeos; chown postgres:postgres /pgsqldata/testaeos;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-test/fncm/postgresql/postgresql/createTESTAEOS.sql'
 
 # FNCM GCD
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/testgcd; chown postgres:postgres /pgsqldata/testgcd;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin:Password@localhost:5432/postgresdb \
+'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-test/fncm/postgresql/postgresql/createGCDDB.sql'
 ```
 
