@@ -1034,10 +1034,12 @@ sed -i \
 'postgresql.BAWDOCS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOS_DB_NAME="BAWDOS"/postgresql.BAWDOS_DB_NAME="DEVBAWDOS"/g' \
 -e 's/postgresql.BAWDOS_DB_USER_NAME="<youruser1>"/postgresql.BAWDOS_DB_USER_NAME="devbawdos"/g' \
--e 's/postgresql.BAWDOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.BAWDOS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.BAWDOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.BAWDOS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWTOS_DB_NAME="BAWTOS"/postgresql.BAWTOS_DB_NAME="DEVBAWTOS"/g' \
 -e 's/postgresql.BAWTOS_DB_USER_NAME="<youruser1>"/postgresql.BAWTOS_DB_USER_NAME="devbawtos"/g' \
--e 's/postgresql.BAWTOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.BAWTOS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.BAWTOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.BAWTOS_DB_USER_PASSWORD="Password"/g' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/\
 cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
 ```
@@ -1047,10 +1049,12 @@ cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.prop
 sed -i \
 -e 's/postgresql.CHOS_DB_NAME="CHOS"/postgresql.CHOS_DB_NAME="DEVCHOS"/g' \
 -e 's/postgresql.CHOS_DB_USER_NAME="<youruser1>"/postgresql.CHOS_DB_USER_NAME="devchos"/g' \
--e 's/postgresql.CHOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.CHOS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.CHOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.CHOS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.AEOS_DB_NAME="AEOS"/postgresql.AEOS_DB_NAME="DEVAEOS"/g' \
 -e 's/postgresql.AEOS_DB_USER_NAME="<youruser1>"/postgresql.AEOS_DB_USER_NAME="devaeos"/g' \
--e 's/postgresql.AEOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.AEOS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.AEOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.AEOS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.ICN_DB_NAME="ICNDB"/postgresql.ICN_DB_NAME="DEVICN"/g' \
 -e 's/postgresql.ICN_DB_USER_NAME="<youruser1>"/postgresql.ICN_DB_USER_NAME="devicn"/g' \
 -e 's/postgresql.ICN_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.ICN_DB_USER_PASSWORD="Password"/g' \
@@ -1060,7 +1064,8 @@ sed -i \
 'postgresql.APP_ENGINE_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.STUDIO_DB_NAME="BASDB"/postgresql.STUDIO_DB_NAME="DEVBAS"/g' \
 -e 's/postgresql.STUDIO_DB_USER_NAME="<youruser1>"/postgresql.STUDIO_DB_USER_NAME="devbas"/g' \
--e 's/postgresql.STUDIO_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.STUDIO_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.STUDIO_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.STUDIO_DB_USER_PASSWORD="Password"/g' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/\
 cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
 ```
@@ -1832,10 +1837,12 @@ sed -i \
 'postgresql.BAWDOCS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOS_DB_NAME="BAWDOS"/postgresql.BAWDOS_DB_NAME="TESTBAWDOS"/g' \
 -e 's/postgresql.BAWDOS_DB_USER_NAME="<youruser1>"/postgresql.BAWDOS_DB_USER_NAME="testbawdos"/g' \
--e 's/postgresql.BAWDOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.BAWDOS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.BAWDOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.BAWDOS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWTOS_DB_NAME="BAWTOS"/postgresql.BAWTOS_DB_NAME="TESTBAWTOS"/g' \
 -e 's/postgresql.BAWTOS_DB_USER_NAME="<youruser1>"/postgresql.BAWTOS_DB_USER_NAME="testbawtos"/g' \
--e 's/postgresql.BAWTOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.BAWTOS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.BAWTOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.BAWTOS_DB_USER_PASSWORD="Password"/g' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
 cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
@@ -1846,10 +1853,12 @@ cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
 sed -i \
 -e 's/postgresql.CHOS_DB_NAME="CHOS"/postgresql.CHOS_DB_NAME="TESTCHOS"/g' \
 -e 's/postgresql.CHOS_DB_USER_NAME="<youruser1>"/postgresql.CHOS_DB_USER_NAME="testchos"/g' \
--e 's/postgresql.CHOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.CHOS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.CHOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.CHOS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.AEOS_DB_NAME="AEOS"/postgresql.AEOS_DB_NAME="TESTAEOS"/g' \
 -e 's/postgresql.AEOS_DB_USER_NAME="<youruser1>"/postgresql.AEOS_DB_USER_NAME="testaeos"/g' \
--e 's/postgresql.AEOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.AEOS_DB_USER_PASSWORD="Password"/g' \
+-e 's/postgresql.AEOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
+'postgresql.AEOS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.ICN_DB_NAME="ICNDB"/postgresql.ICN_DB_NAME="TESTICN"/g' \
 -e 's/postgresql.ICN_DB_USER_NAME="<youruser1>"/postgresql.ICN_DB_USER_NAME="testicn"/g' \
 -e 's/postgresql.ICN_DB_USER_PASSWORD="{Base64}<yourpassword>"/postgresql.ICN_DB_USER_PASSWORD="Password"/g' \
