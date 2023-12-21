@@ -1,6 +1,6 @@
 # Cloud Pak for Business Automation Production deployment manual installation ✍️<!-- omit in toc -->
 
-For version 23.0.1 iFix 5
+For version 23.0.2
 
 Installs BAW and FNCM environment.
 
@@ -58,8 +58,8 @@ Not for production use. Suitable for Demo and PoC environments - but with Produc
 
 ## Preparing your cluster
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-preparing-your-cluster and  
-https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-getting-access-images-from-public-entitled-registry
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-preparing-your-cluster and  
+https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-getting-access-images-from-public-entitled-registry
 
 - Empty OpenShift cluster of a supported version
 - With direct internet connection
@@ -70,7 +70,7 @@ https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment
 
 ## Preparing a client to connect to the cluster
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-preparing-client-connect-cluster
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-preparing-client-connect-cluster
 and additional utilities for script execution
 
 Requested tooling provided in the install Pod.
@@ -696,11 +696,11 @@ PostgreSQL
 
 ## Cloud Pak for Business Automation Development Environment
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployments-installing-cp4ba-multi-pattern-production-deployment
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployments-installing-cp4ba-multi-pattern-production-deployment
 
 ### Preparing a client to connect to the cluster
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-preparing-client-connect-cluster
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-preparing-client-connect-cluster
 
 ```bash
 # Create directory for cp4ba-dev
@@ -708,22 +708,22 @@ mkdir /usr/install/cp4ba-dev
 
 # Download the package
 curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
-ibm-cp-automation/5.0.5+20231124.001758/ibm-cp-automation-5.0.5+20231124.001758.tgz \
---output /usr/install/cp4ba-dev/ibm-cp-automation-5.0.5+20231124.001758.tgz
+ibm-cp-automation/5.1.0/ibm-cp-automation-5.1.0.tgz \
+--output /usr/install/cp4ba-dev/ibm-cp-automation-5.1.0.tgz
 
 # Extract the package
-tar xzvf /usr/install/cp4ba-dev/ibm-cp-automation-5.0.5+20231124.001758.tgz -C /usr/install/cp4ba-dev/
+tar xzvf /usr/install/cp4ba-dev/ibm-cp-automation-5.1.0.tgz -C /usr/install/cp4ba-dev/
 
 # Extract cert-kubernetes
 tar xvf /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-k8s-23.0.1.tar \
+cp4aOperatorSdk/files/deploy/crs/cert-k8s-23.0.2.tar \
 -C /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/
 ```
 
 ### Setting up the cluster by running a script
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=cluster-setting-up-by-running-script
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=cluster-setting-up-by-running-script
 
 Initiate cluster admin setup
 ```bash
@@ -736,10 +736,6 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-clusteradmin-setup
 
 [✔] IBM CP4BA Operator catalog source Updated!
 
-
-[INFO] Starting to install IBM Cert Manager and IBM Licensing Operator ...
-...Omitted lots of content about the installations
-
 Select the cloud platform to deploy: 
 1) RedHat OpenShift Kubernetes Service (ROKS) - Public Cloud
 2) Openshift Container Platform (OCP) - Private Cloud
@@ -751,8 +747,16 @@ What type of deployment is being performed?
 2) Production
 Enter a valid option [1 to 2]: 2
 
+[NOTES] If you are planning to enable FIPS for CP4BA deployment, this script can perform a check on the OCP cluster to ensure the compute nodes have FIPS enabled.
+Do you want to proceed with this check? (Yes/No, default: No): No
+
+[NOTES] If your cluster is not connected to the internet, you can install Cloud Pak for Business Automation in an air gap environment with the IBM Catalog Management Plug-in. Use either a bastion host, or a portable compute/storage device to transfer the images to your air gap environment.
+
+Do you want to deploy CP4BA using private catalog? (Yes/No, default: No): Yes
+
 Where do you want to deploy Cloud Pak for Business Automation?
 Enter the name for a new project or an existing project (namespace): cp4ba-dev
+Using project cp4ba-dev...
 
 The Cloud Pak for Business Automation Operator (Pod, CSV, Subscription) not found in cluster
 Continue....
@@ -765,9 +769,12 @@ Here are the existing users on this cluster:
 Enter an existing username in your cluster, valid option [1 to 3], non-admin is suggested: 2
 ATTENTION: When you run cp4a-deployment.sh script, please use cluster admin user.
 
+[INFO] Creating cp4ba-fips-status configMap in the project "cp4ba-dev"
+
+[✔] Created cp4ba-fips-status configMap in the project "cp4ba-dev".
 
 Follow the instructions on how to get your Entitlement Key: 
-https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=images-getting-access-from-public-entitled-registry
+https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=images-getting-access-from-public-entitled-registry
 
 Do you have a Cloud Pak for Business Automation Entitlement Registry key (Yes/No, default: No): Yes
 
@@ -784,6 +791,10 @@ The existing storage classes in the cluster:
 Creating docker-registry secret for Entitlement Registry key in project cp4ba-dev...
 secret/ibm-entitlement-key created
 Done
+
+
+[INFO] Starting to install IBM Cert Manager and IBM Licensing Operator ...
+......omitted Lots of content for IBM Cert Manager and IBM Licensing installation
 
 Waiting for the Cloud Pak for Business Automation operator to be ready. This might take a few minutes...
 
@@ -836,7 +847,7 @@ oc get csv -n cp4ba-dev -w
 
 ### Prepare property files
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
 
 Generate properties for components that you would like to deploy.
 ```bash
@@ -851,9 +862,6 @@ Enter a valid option [1 to 4, 5a, 5b, 6, 7a, 7b]: 5a
 
 Tips:Press [ENTER] to accept the default (None of the patterns is selected)
 Enter a valid option [1 to 4, 5a, 5b, 6, 7a, 7b]: 1
-
-Tips:Press [ENTER] to accept the default (None of the patterns is selected)
-Enter a valid option [1 to 4, 5a, 5b, 6, 7a, 7b]: 4
 
 Hit Enter to continue.
 
@@ -874,27 +882,13 @@ Enter a valid option [1 to 6 or ENTER]:
 
 Hit Enter to continue.
 
-Pattern "Business Automation Application": Select optional components: 
-1) Application Designer 
-
-Tips: Application Designer is typically required if you are deploying a development or test environment.
-This feature will automatically install Business Automation Studio, if not already present. 
-
-Application Engine is automatically installed in the environment.  
-
-Make your selection or press enter to proceed. 
-
-Tips: Press [ENTER] if you do not want any optional components or when you are finished selecting your optional components
-Enter a valid option [1 to 1 or ENTER]:
-
-Hit Enter to continue.
-
 Pattern "(a) Workflow Authoring": Select optional components: 
 1) Business Automation Insights
 2) Data Collector and Data Indexer
+3) Exposed Kafka Services 
 
 Tips: Press [ENTER] to accept the default (None of the components is selected)
-Enter a valid option [1 to 2 or ENTER]: 2
+Enter a valid option [1 to 3 or ENTER]:
 
 Hit Enter to continue.
 
@@ -909,6 +903,12 @@ please enter the file storage classname for slow storage(RWX): ocs-storagecluste
 please enter the file storage classname for medium storage(RWX): ocs-storagecluster-cephfs
 please enter the file storage classname for fast storage(RWX): ocs-storagecluster-cephfs
 please enter the block storage classname for Zen(RWO): ocs-storagecluster-ceph-rbd
+
+Please select the deployment profile (default: small).  Refer to the documentation in CP4BA Knowledge Center for details on profile.
+1) small
+2) medium
+3) large
+Enter a valid option [1 to 3]: 1
 
 What is the Database type used for this deployment? 
 1) IBM Db2 Database
@@ -926,6 +926,11 @@ Enter the alias name(s) for the database server(s)/instance(s) to be used by the
 (NOTE: NOT the host name of the database server, and CANNOT include a dot[.] character)
 (NOTE: This key supports comma-separated lists (for example: dbserver1,dbserver2,dbserver3)
 The alias name(s): postgresql
+
+Where do you want to deploy Cloud Pak for Business Automation?
+Enter the name for an existing project (namespace): cp4ba-dev
+
+Do you want to restrict network egress to unknown external destination for this CP4BA deployment? (Notes: CP4BA 23.0.2 prevents all network egress to unknown destinations by default. You can either (1) enable all egress or (2) accept the new default and create network policies to allow your specific communication targets as documented in the knowledge center.) (Yes/No, default: Yes): No (To allow connectivity to containerized LDAP and DB)
 
 How many object stores will be deployed for the content pattern? 1
 
@@ -1053,18 +1058,10 @@ sed -i \
 -e 's/postgresql.CHOS_DB_USER_NAME="<youruser1>"/postgresql.CHOS_DB_USER_NAME="devchos"/g' \
 -e 's/postgresql.CHOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.CHOS_DB_USER_PASSWORD="Password"/g' \
--e 's/postgresql.AEOS_DB_NAME="AEOS"/postgresql.AEOS_DB_NAME="DEVAEOS"/g' \
--e 's/postgresql.AEOS_DB_USER_NAME="<youruser1>"/postgresql.AEOS_DB_USER_NAME="devaeos"/g' \
--e 's/postgresql.AEOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
-'postgresql.AEOS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.ICN_DB_NAME="ICNDB"/postgresql.ICN_DB_NAME="DEVICN"/g' \
 -e 's/postgresql.ICN_DB_USER_NAME="<youruser1>"/postgresql.ICN_DB_USER_NAME="devicn"/g' \
 -e 's/postgresql.ICN_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.ICN_DB_USER_PASSWORD="Password"/g' \
--e 's/postgresql.APP_ENGINE_DB_NAME="AAEDB"/postgresql.APP_ENGINE_DB_NAME="DEVAAE"/g' \
--e 's/postgresql.APP_ENGINE_DB_USER_NAME="<youruser1>"/postgresql.APP_ENGINE_DB_USER_NAME="devaae"/g' \
--e 's/postgresql.APP_ENGINE_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
-'postgresql.APP_ENGINE_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.STUDIO_DB_NAME="BASDB"/postgresql.STUDIO_DB_NAME="DEVBAS"/g' \
 -e 's/postgresql.STUDIO_DB_USER_NAME="<youruser1>"/postgresql.STUDIO_DB_USER_NAME="devbas"/g' \
 -e 's/postgresql.STUDIO_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
@@ -1137,7 +1134,6 @@ sed -i \
 -e 's/BAN.APPLOGIN_PASSWORD="{Base64}<Required>"/BAN.APPLOGIN_PASSWORD="Password"/g' \
 -e 's/BAN.LTPA_PASSWORD="{Base64}<Required>"/BAN.LTPA_PASSWORD="Password"/g' \
 -e 's/BAN.KEYSTORE_PASSWORD="{Base64}<Required>"/BAN.KEYSTORE_PASSWORD="Password"/g' \
--e 's/APP_ENGINE.ADMIN_USER="<Required>"/APP_ENGINE.ADMIN_USER="cpadmin"/g' \
 -e 's/BASTUDIO.ADMIN_USER="<Required>"/BASTUDIO.ADMIN_USER="cpadmin"/g' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/\
@@ -1146,7 +1142,7 @@ scripts/cp4ba-prerequisites/propertyfile/cp4ba_user_profile.property
 
 ### Generate, update and apply SQL and Secret files
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
 
 Generate SQL and Secrets
 ```bash
@@ -1173,11 +1169,6 @@ cp4ba-postgresql/$(oc get pods --namespace cp4ba-postgresql -o name | cut -d"/" 
 
 Execute create scripts with table space directory creation
 ```bash
-# Application engine
-oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
---file=/usr/dbscript-dev/ae/postgresql/postgresql/create_app_engine_db.sql'
-
 # Studio
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'psql postgresql://cpadmin@localhost:5432/postgresdb \
@@ -1220,13 +1211,6 @@ oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-dev/fncm/postgresql/postgresql/createOS1DB.sql'
 
-# FNCM AEOS
-oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/devaeos; chown postgres:postgres /pgsqldata/devaeos;'
-oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
---file=/usr/dbscript-dev/fncm/postgresql/postgresql/createDEVAEOS.sql'
-
 # FNCM GCD
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/devgcd; chown postgres:postgres /pgsqldata/devgcd;'
@@ -1248,7 +1232,7 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/cre
 
 ### Validate connectivity
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
 
 ```bash
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
@@ -1258,7 +1242,7 @@ Look for all green checkmarks.
 
 ### Generating the custom resource with the deployment script
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-option-2-generating-custom-resource-script
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-option-2a-generating-custom-resource-script
 
 Run deployment script
 ```bash
@@ -1290,22 +1274,14 @@ Enter a valid option [1 to 2]: 2
 *******************************************************
 1. Cloud Pak capability to deploy: 
    * FileNet Content Manager
-   * Business Automation Application
    * Business Automation Workflow
      (a) Workflow Authoring
 2. Optional components to deploy: 
-   * Data Collector and Data Indexer
+   * None
 *******************************************************
 
 [INFO] Above CP4BA capabilities is already selected in the cp4a-prerequisites.sh script
 Press any key to continue
-
-
-Please select the deployment profile (default: small).  Refer to the documentation in CP4BA Knowledge Center for details on profile.
-1) small
-2) medium
-3) large
-Enter a valid option [1 to 3]: 1
 
 Select the cloud platform to deploy: 
 1) RedHat OpenShift Kubernetes Service (ROKS) - Public Cloud
@@ -1329,11 +1305,10 @@ The Operator will configure using the default shipped JDBC driver.
 *******************************************************
 1. Cloud Pak capability to deploy: 
    * FileNet Content Manager
-   * Business Automation Application
    * Business Automation Workflow
      (a) Workflow Authoring
 2. Optional components to deploy: 
-   * Data Collector and Data Indexer
+   * None
 3. File storage classname(RWX):
    * Slow: ocs-storagecluster-cephfs
    * Medium: ocs-storagecluster-cephfs
@@ -1359,12 +1334,12 @@ ATTENTION: If the cluster is running a Linux on Z (s390x)/Power architecture, re
 
 To monitor the deployment status, follow the Operator logs.
 For details, refer to the troubleshooting section in Knowledge Center here: 
-https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=automation-troubleshooting
+https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=automation-troubleshooting
 ```
 
 ### Checking and completing your custom resource
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-checking-completing-your-custom-resource
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-checking-completing-your-custom-resource
 
 Change LDAP sub settings from tds to custom
 ```bash
@@ -1386,7 +1361,7 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_c
 
 ### Deploying the custom resource you created with the deployment script
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=cpd-option-2-deploying-custom-resource-you-created-deployment-script
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=cpd-option-2b-deploying-custom-resource-you-created-deployment-script
 
 Apply CR  
 ```bash
@@ -1423,9 +1398,9 @@ oc get -n cp4ba-dev icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}" 
 
 ### Completing post-installation tasks
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-completing-post-installation-tasks
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-completing-post-installation-tasks
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=cpbaf-business-automation-studio  
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=cpbaf-business-automation-studio  
 You need to setup permissions for your users.  
 ```bash
 # Get password of zen initial admin
@@ -1455,7 +1430,7 @@ https://cpd-cp4ba-dev.${apps_endpoint}/usermgmt/v1/user/cpadmin?add_roles=true
 
 ### Validating your production deployment
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-recommended-validating-your-production
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-recommended-validating-your-production
 
 You can further verify the environemnts and get important information. But before running anything else then --help follow additional steps for script configuration.
 ```bash
@@ -1521,21 +1496,21 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --
 
 ### Next steps
 
-Follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-completing-post-installation-tasks as needed.
+Follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-completing-post-installation-tasks as needed.
 
-Custom CPFS console TLS - follow https://www.ibm.com/docs/en/cloud-paks/1.0?topic=management-replacing-foundational-services-endpoint-certificates#rep_cs370
+Custom CPFS console TLS - follow https://www.ibm.com/docs/en/SSYHZ8_23.0.2/com.ibm.dba.managing/op_topics/tsk_custom_cp4ba_iam.html
 
-Custom CPFS admin password - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=tasks-cloud-pak-foundational-services
+Custom CPFS admin password - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=tasks-cloud-pak-foundational-services
 
-Custom Zen certificates - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=security-customizing-cloud-pak-entry-point
+Custom Zen certificates - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=security-customizing-cloud-pak-entry-point
 
 ## Cloud Pak for Business Automation Test Environment
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployments-installing-cp4ba-multi-pattern-production-deployment
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployments-installing-cp4ba-multi-pattern-production-deployment
 
 ### Preparing a client to connect to the cluster
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-preparing-client-connect-cluster
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-preparing-client-connect-cluster
 
 ```bash
 # Create directory for cp4ba-test
@@ -1543,22 +1518,22 @@ mkdir /usr/install/cp4ba-test
 
 # Download the package
 curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
-ibm-cp-automation/5.0.5+20231124.001758/ibm-cp-automation-5.0.5+20231124.001758.tgz \
---output /usr/install/cp4ba-test/ibm-cp-automation-5.0.5+20231124.001758.tgz
+ibm-cp-automation/5.1.0/ibm-cp-automation-5.1.0.tgz \
+--output /usr/install/cp4ba-test/ibm-cp-automation-5.1.0.tgz
 
 # Extract the package
-tar xzvf /usr/install/cp4ba-test/ibm-cp-automation-5.0.5+20231124.001758.tgz -C /usr/install/cp4ba-test/
+tar xzvf /usr/install/cp4ba-test/ibm-cp-automation-5.1.0.tgz -C /usr/install/cp4ba-test/
 
 # Extract cert-kubernetes
 tar xvf /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-k8s-23.0.1.tar \
+cp4aOperatorSdk/files/deploy/crs/cert-k8s-23.0.2.tar \
 -C /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/
 ```
 
 ### Setting up the cluster by running a script
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=cluster-setting-up-by-running-script
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=cluster-setting-up-by-running-script
 
 Initiate cluster admin setup
 ```bash
@@ -1578,16 +1553,15 @@ What type of deployment is being performed?
 2) Production
 Enter a valid option [1 to 2]: 2
 
+[NOTES] If you are planning to enable FIPS for CP4BA deployment, this script can perform a check on the OCP cluster to ensure the compute nodes have FIPS enabled.
+Do you want to proceed with this check? (Yes/No, default: No): No
+
+[NOTES] If your cluster is not connected to the internet, you can install Cloud Pak for Business Automation in an air gap environment with the IBM Catalog Management Plug-in. Use either a bastion host, or a portable compute/storage device to transfer the images to your air gap environment.
+
+Do you want to deploy CP4BA using private catalog? (Yes/No, default: No): Yes
+
 Where do you want to deploy Cloud Pak for Business Automation?
 Enter the name for a new project or an existing project (namespace): cp4ba-test
-
-Found the existing Cloud Pak for Business Automation Operator (Pod, CSV, Subscription) in different project "cp4ba-dev"! 
-
-Do you want to deploy another CP4BA Operator in new project "cp4ba-test"? (Yes/No, default: No) Yes
-Continue....
-
-true
-Using project cp4ba-test...
 
 Here are the existing users on this cluster: 
 1) Cluster Admin
@@ -1595,9 +1569,12 @@ Here are the existing users on this cluster:
 Enter an existing username in your cluster, valid option [1 to 3], non-admin is suggested: 2
 ATTENTION: When you run cp4a-deployment.sh script, please use cluster admin user.
 
+[INFO] Creating cp4ba-fips-status configMap in the project "cp4ba-test"
+
+[✔] Created cp4ba-fips-status configMap in the project "cp4ba-test".
 
 Follow the instructions on how to get your Entitlement Key: 
-https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=images-getting-access-from-public-entitled-registry
+https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=images-getting-access-from-public-entitled-registry
 
 Do you have a Cloud Pak for Business Automation Entitlement Registry key (Yes/No, default: No): Yes
 
@@ -1614,6 +1591,9 @@ The existing storage classes in the cluster:
 Creating docker-registry secret for Entitlement Registry key in project cp4ba-test...
 secret/ibm-entitlement-key created
 Done
+
+[INFO] Starting to install IBM Cert Manager and IBM Licensing Operator ...
+......omitted Lots of content for IBM Cert Manager and IBM Licensing installation
 
 Waiting for the Cloud Pak for Business Automation operator to be ready. This might take a few minutes... 
 
@@ -1665,7 +1645,7 @@ oc get csv -n cp4ba-test -w
 
 ### Prepare property files
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
 
 Generate properties for components that you would like to deploy.
 ```bash
@@ -1698,11 +1678,13 @@ Enter a valid option [1 to 6 or ENTER]:
 
 Hit Enter to continue.
 
-Pattern "(a) Workflow Authoring": Select optional components: 
+Pattern "(b) Workflow Runtime": Select optional components: 
 1) Business Automation Insights 
+2) Exposed Kafka Services 
+3) Exposed Elasticsearch 
 
-Tips: Press [ENTER] to accept the default (None of the components is selected)
-Enter a valid option [1 to 1 or ENTER]: 
+Tips: Press [ENTER] if you do not want any optional components or when you are finished selecting your optional components
+Enter a valid option [1 to 3 or ENTER]: 
 
 Hit Enter to continue.
 
@@ -1718,6 +1700,12 @@ please enter the file storage classname for slow storage(RWX): ocs-storagecluste
 please enter the file storage classname for medium storage(RWX): ocs-storagecluster-cephfs
 please enter the file storage classname for fast storage(RWX): ocs-storagecluster-cephfs
 please enter the block storage classname for Zen(RWO): ocs-storagecluster-ceph-rbd
+
+Please select the deployment profile (default: small).  Refer to the documentation in CP4BA Knowledge Center for details on profile.
+1) small
+2) medium
+3) large
+Enter a valid option [1 to 3]: 1
 
 What is the Database type used for this deployment? 
 1) IBM Db2 Database
@@ -1737,6 +1725,13 @@ Enter the alias name(s) for the database server(s)/instance(s) to be used by the
 (NOTE: NOT the host name of the database server, and CANNOT include a dot[.] character)
 (NOTE: This key supports comma-separated lists (for example: dbserver1,dbserver2,dbserver3)
 The alias name(s): postgresql
+
+Where do you want to deploy Cloud Pak for Business Automation?
+Enter the name for an existing project (namespace): cp4ba-test
+Using project cp4ba-test...
+
+
+Do you want to restrict network egress to unknown external destination for this CP4BA deployment? (Notes: CP4BA 23.0.2 prevents all network egress to unknown destinations by default. You can either (1) enable all egress or (2) accept the new default and create network policies to allow your specific communication targets as documented in the knowledge center.) (Yes/No, default: Yes): No
 
 How many object stores will be deployed for the content pattern? 1
 
@@ -1868,10 +1863,6 @@ sed -i \
 -e 's/postgresql.ICN_DB_USER_NAME="<youruser1>"/postgresql.ICN_DB_USER_NAME="testicn"/g' \
 -e 's/postgresql.ICN_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.ICN_DB_USER_PASSWORD="Password"/g' \
--e 's/postgresql.APP_ENGINE_DB_NAME="AAEDB"/postgresql.APP_ENGINE_DB_NAME="TESTAAE"/g' \
--e 's/postgresql.APP_ENGINE_DB_USER_NAME="<youruser1>"/postgresql.APP_ENGINE_DB_USER_NAME="testaae"/g' \
--e 's/postgresql.APP_ENGINE_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
-'postgresql.APP_ENGINE_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAW_RUNTIME_DB_NAME="BAWDB"/postgresql.BAW_RUNTIME_DB_NAME="TESTBAW"/g' \
 -e 's/postgresql.BAW_RUNTIME_DB_USER_NAME="<youruser1>"/postgresql.BAW_RUNTIME_DB_USER_NAME="testbaw"/g' \
 -e 's/postgresql.BAW_RUNTIME_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
@@ -1944,7 +1935,6 @@ sed -i \
 -e 's/BAN.APPLOGIN_PASSWORD="{Base64}<Required>"/BAN.APPLOGIN_PASSWORD="Password"/g' \
 -e 's/BAN.LTPA_PASSWORD="{Base64}<Required>"/BAN.LTPA_PASSWORD="Password"/g' \
 -e 's/BAN.KEYSTORE_PASSWORD="{Base64}<Required>"/BAN.KEYSTORE_PASSWORD="Password"/g' \
--e 's/APP_ENGINE.ADMIN_USER="<Required>"/APP_ENGINE.ADMIN_USER="cpadmin"/g' \
 -e 's/BAW_RUNTIME.ADMIN_USER="<Required>"/BAW_RUNTIME.ADMIN_USER="cpadmin"/g' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
@@ -1978,11 +1968,6 @@ cp4ba-postgresql/$(oc get pods --namespace cp4ba-postgresql -o name | cut -d"/" 
 
 Execute create scripts with table space directory creation
 ```bash
-# Application engine
-oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
---file=/usr/dbscript-test/ae/postgresql/postgresql/create_app_engine_db.sql'
-
 # BAW runtime
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'psql postgresql://cpadmin@localhost:5432/postgresdb \
@@ -2025,13 +2010,6 @@ oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'psql postgresql://cpadmin@localhost:5432/postgresdb \
 --file=/usr/dbscript-test/fncm/postgresql/postgresql/createOS1DB.sql'
 
-# FNCM AEOS
-oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/testaeos; chown postgres:postgres /pgsqldata/testaeos;'
-oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
---file=/usr/dbscript-test/fncm/postgresql/postgresql/createTESTAEOS.sql'
-
 # FNCM GCD
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 'mkdir /pgsqldata/testgcd; chown postgres:postgres /pgsqldata/testgcd;'
@@ -2053,7 +2031,7 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/cre
 
 ### Validate connectivity
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
 
 ```bash
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
@@ -2063,7 +2041,7 @@ Look for all green checkmarks.
 
 ### Generating the custom resource with the deployment script
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-option-2-generating-custom-resource-script
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-option-2a-generating-custom-resource-script
 
 Run deployment script  
 ```bash
@@ -2103,13 +2081,6 @@ Enter a valid option [1 to 2]: 2
 
 [INFO] Above CP4BA capabilities is already selected in the cp4a-prerequisites.sh script
 Press any key to continue
-
-
-Please select the deployment profile (default: small).  Refer to the documentation in CP4BA Knowledge Center for details on profile.
-1) small
-2) medium
-3) large
-Enter a valid option [1 to 3]: 1
 
 Select the cloud platform to deploy: 
 1) RedHat OpenShift Kubernetes Service (ROKS) - Public Cloud
@@ -2166,12 +2137,12 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_c
 
 To monitor the deployment status, follow the Operator logs.
 For details, refer to the troubleshooting section in Knowledge Center here: 
-https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=automation-troubleshooting
+https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=automation-troubleshooting
 ```
 
 ### Checking and completing your custom resource
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-checking-completing-your-custom-resource
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-checking-completing-your-custom-resource
 
 Change LDAP sub settings from tds to custom
 ```bash
@@ -2181,7 +2152,7 @@ sed -i \
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=parameters-business-automation-workflow-runtime-workstream-services  
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=parameters-business-automation-workflow-runtime-workstream-services  
 Set env type to Test
 ```bash
 yq -i '.spec.baw_configuration[0].env_type = "Test"' \
@@ -2201,7 +2172,14 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_c
 
 ### Deploying the custom resource you created with the deployment script
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=cpd-option-2-deploying-custom-resource-you-created-deployment-script
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=cpd-option-2b-deploying-custom-resource-you-created-deployment-script
+
+Fix included application engine part which shoul dnot be there (TODO present in 23.0.2 GA)
+```bash
+yq -i 'del(.spec.application_engine_configuration)' \
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+```
 
 Apply CR  
 ```bash
@@ -2238,9 +2216,9 @@ oc get -n cp4ba-test icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}"
 
 ### Completing post-installation tasks
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-completing-post-installation-tasks
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-completing-post-installation-tasks
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=cpbaf-business-automation-studio  
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=cpbaf-business-automation-studio  
 You need to setup permissions for your users.  
 ```bash
 # Get password of zen initial admin
@@ -2270,7 +2248,7 @@ https://cpd-cp4ba-test.${apps_endpoint}/usermgmt/v1/user/cpadmin?add_roles=true
 
 ### Validating your production deployment
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-recommended-validating-your-production
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-recommended-validating-your-production
 
 You can further verify the environemnts and get important information. But before running anything else then --help follow additional steps for script configuration.
 ```bash
@@ -2336,17 +2314,17 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --
 
 ### Next steps
 
-Follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=deployment-completing-post-installation-tasks as needed.
+Follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-completing-post-installation-tasks as needed.
 
-Custom CPFS console TLS - follow https://www.ibm.com/docs/en/cloud-paks/1.0?topic=management-replacing-foundational-services-endpoint-certificates#rep_cs370
+Custom CPFS console TLS - follow https://www.ibm.com/docs/en/SSYHZ8_23.0.2/com.ibm.dba.managing/op_topics/tsk_custom_cp4ba_iam.html
 
-Custom Zen certificates - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=security-customizing-cloud-pak-entry-point
+Custom Zen certificates - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=security-customizing-cloud-pak-entry-point
 
-Custom CPFS admin password - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=tasks-cloud-pak-foundational-services
+Custom CPFS admin password - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=tasks-cloud-pak-foundational-services
 
-#### Connect to Authoring  
+#### Connect to Authoring
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.1?topic=customizing-business-automation-workflow-runtime-connect-workflow-authoring
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=customizing-business-automation-workflow-runtime-connect-workflow-authoring
 The exchange needs to happen periodically based on the validity of the certificates.
 
 ```bash
@@ -2425,7 +2403,7 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_c
 ```
 ```bash
 # Configure Workflow Authoring to trust Workflow Runtime TLS
-yq -i '.spec.workflow_authoring_configuration.tls = {"tls_trust_list": '\
+yq -i '.spec.bastudio_configuration.tls = {"tls_trust_list": '\
 '["bawaut-tls-zen-secret", "bawaut-tls-cs-secret", "bawaut-routerca-secret"]}' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
@@ -2436,7 +2414,8 @@ echo $apps_endpoint
 
 # Configure Workflow Authoring to trust Workflow Runtime URLs
 yq -i '.spec.workflow_authoring_configuration.environment_config = '\
-'{"csrf":{"origin_allowlist":'\
+'{"content_security_policy_additional_all":["https://cpd-cp4ba-test.'$apps_endpoint'/baw-bawins1/"],'\
+'"csrf":{"origin_allowlist":'\
 '"https://cpd-cp4ba-test.'$apps_endpoint',https://cp-console-cp4ba-test.'$apps_endpoint'",'\
 '"referer_allowlist":'\
 '"cpd-cp4ba-test.'$apps_endpoint',cp-console-cp4ba-test.'$apps_endpoint'"}}' \
