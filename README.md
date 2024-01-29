@@ -56,6 +56,8 @@ Please do not hesitate to create an issue here if needed. Your feedback is appre
 
 Not for production use. Suitable for Demo and PoC environments - but with Production deployment.
 
+OpenLDAP is not a supported LDAP provider for CP4BA.
+
 ## Preparing your cluster
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-preparing-your-cluster and  
