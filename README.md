@@ -56,6 +56,8 @@ Please do not hesitate to create an issue here if needed. Your feedback is appre
 
 Not for production use. Suitable for Demo and PoC environments - but with Production deployment.
 
+OpenLDAP is not a supported LDAP provider for CP4BA.
+
 ## Preparing your cluster
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-preparing-your-cluster and  
@@ -740,7 +742,7 @@ Select the cloud platform to deploy:
 1) RedHat OpenShift Kubernetes Service (ROKS) - Public Cloud
 2) Openshift Container Platform (OCP) - Private Cloud
 3) Other ( Certified Kubernetes Cloud Platform / CNCF)
-Enter a valid option [1 to 3]: 1 # Or 2 based on your platform
+Enter a valid option [1 to 3]: 2 # Based on your platform
 
 What type of deployment is being performed?
 1) Starter
@@ -1091,7 +1093,8 @@ sed -i \
 -e 's/LDAP_SSL_ENABLED="True"/LDAP_SSL_ENABLED="False"/g' \
 -e 's/LDAP_USER_NAME_ATTRIBUTE="\*:uid"/LDAP_USER_NAME_ATTRIBUTE="*:cn"/g' \
 -e 's/LDAP_GROUP_BASE_DN="<Required>"/LDAP_GROUP_BASE_DN="ou=Groups,dc=cp,dc=internal"/g' \
--e 's/LC_USER_FILTER="(\&(cn=%v)(objectclass=person))"/LC_USER_FILTER="(\&(uid=%v)(objectclass=inetOrgPerson))"/g' \
+-e 's/LC_USER_FILTER="(\&(cn=%v)(objectclass=person))"/'\
+'LC_USER_FILTER="(\&(uid=%v)(objectclass=inetOrgPerson))"/g' \g' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/\
 scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property
@@ -1287,7 +1290,7 @@ Select the cloud platform to deploy:
 1) RedHat OpenShift Kubernetes Service (ROKS) - Public Cloud
 2) Openshift Container Platform (OCP) - Private Cloud
 3) Other ( Certified Kubernetes Cloud Platform / CNCF)
-Enter a valid option [1 to 3]: 1 # Or 2 based on your platform
+Enter a valid option [1 to 3]: 2 # Based on your platform
 
 ATTENTION: If you are unable to use [cpadmin] as the default IAM admin user due to it having the same user name in your LDAP Directory, you need to change the Cloud Pak administrator username. See: "https://www.ibm.com/docs/en/cpfs?topic=configurations-changing-cloud-pak-administrator-access-credentials#user-name"
 Do you want to use the default IAM admin user: [cpadmin] (Yes/No, default: Yes): No
@@ -1369,24 +1372,31 @@ oc apply -n cp4ba-dev -f /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
-Wait for the deployment to be completed. Can be determined by looking in Project cp4ba-dev in Kind ICP4ACluster, instance named icp4adeploy to have the following conditions:
+Wait for the deployment to be completed. This can be determined by looking in Project cp4ba-dev in Kind ICP4ACluster, instance named icp4adeploy to have the following conditions:
 ```bash
-oc get -n cp4ba-dev icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}" -w
+oc get -n cp4ba-dev icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}" | jq
 ```
-```yaml
-  conditions:
-    - message: Running reconciliation
-      reason: Running
-      status: 'True'
-      type: Running
-    - message: Prerequisites execution done.
-      reason: Successful
-      status: 'True'
-      type: PrereqReady
-    - message: ''
-      reason: Successful
-      status: 'True'
-      type: Ready
+```json
+[
+  {
+    "message": "Running reconciliation",
+    "reason": "Running",
+    "status": "True",
+    "type": "Running"
+  },
+  {
+    "message": "",
+    "reason": "Successful",
+    "status": "True",
+    "type": "Ready"
+  },
+  {
+    "message": "Prerequisites execution done.",
+    "reason": "Successful",
+    "status": "True",
+    "type": "PrereqReady"
+  }
+]
 ```
 
 ### Access info after deployment
@@ -1546,7 +1556,7 @@ Select the cloud platform to deploy:
 1) RedHat OpenShift Kubernetes Service (ROKS) - Public Cloud
 2) Openshift Container Platform (OCP) - Private Cloud
 3) Other ( Certified Kubernetes Cloud Platform / CNCF)
-Enter a valid option [1 to 3]: 1 # Or 2 based on your platform
+Enter a valid option [1 to 3]: 2 # Based on your platform
 
 What type of deployment is being performed?
 1) Starter
@@ -1892,7 +1902,8 @@ sed -i \
 -e 's/LDAP_SSL_ENABLED="True"/LDAP_SSL_ENABLED="False"/g' \
 -e 's/LDAP_USER_NAME_ATTRIBUTE="\*:uid"/LDAP_USER_NAME_ATTRIBUTE="*:cn"/g' \
 -e 's/LDAP_GROUP_BASE_DN="<Required>"/LDAP_GROUP_BASE_DN="ou=Groups,dc=cp,dc=internal"/g' \
--e 's/LC_USER_FILTER="(\&(cn=%v)(objectclass=person))"/LC_USER_FILTER="(\&(uid=%v)(objectclass=inetOrgPerson))"/g' \
+-e 's/LC_USER_FILTER="(\&(cn=%v)(objectclass=person))"/'\
+'LC_USER_FILTER="(\&(uid=%v)(objectclass=inetOrgPerson))"/g' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
 cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property
@@ -2086,7 +2097,7 @@ Select the cloud platform to deploy:
 1) RedHat OpenShift Kubernetes Service (ROKS) - Public Cloud
 2) Openshift Container Platform (OCP) - Private Cloud
 3) Other ( Certified Kubernetes Cloud Platform / CNCF)
-Enter a valid option [1 to 3]: 2
+Enter a valid option [1 to 3]: 2 # Based on your platform
 
 ATTENTION: If you are unable to use [cpadmin] as the default IAM admin user due to it having the same user name in your LDAP Directory, you need to change the Cloud Pak administrator username. See: "https://www.ibm.com/docs/en/cpfs?topic=configurations-changing-cloud-pak-administrator-access-credentials#user-name"
 Do you want to use the default IAM admin user: [cpadmin] (Yes/No, default: Yes): No
@@ -2187,24 +2198,31 @@ oc apply -n cp4ba-test -f /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
-Wait for the deployment to be completed. Can be determined by looking in Project cp4ba-test in Kind ICP4ACluster, instance named icp4adeploy to have the following conditions:
+Wait for the deployment to be completed. This can be determined by looking in Project cp4ba-dev in Kind ICP4ACluster, instance named icp4adeploy to have the following conditions:
 ```bash
-oc get -n cp4ba-test icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}" -w
+oc get -n cp4ba-dev icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}" | jq
 ```
-```yaml
-  conditions:
-    - message: Running reconciliation
-      reason: Running
-      status: 'True'
-      type: Running
-    - message: Prerequisites execution done.
-      reason: Successful
-      status: 'True'
-      type: PrereqReady
-    - message: ''
-      reason: Successful
-      status: 'True'
-      type: Ready
+```json
+[
+  {
+    "message": "Running reconciliation",
+    "reason": "Running",
+    "status": "True",
+    "type": "Running"
+  },
+  {
+    "message": "",
+    "reason": "Successful",
+    "status": "True",
+    "type": "Ready"
+  },
+  {
+    "message": "Prerequisites execution done.",
+    "reason": "Successful",
+    "status": "True",
+    "type": "PrereqReady"
+  }
+]
 ```
 
 ### Access info after deployment
