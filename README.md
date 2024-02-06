@@ -704,6 +704,8 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=d
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-preparing-client-connect-cluster
 
+CASE packages repository https://github.com/IBM/cloud-pak/tree/master/repo/case/ibm-cp-automation
+
 ```bash
 # Create directory for cp4ba-dev
 mkdir /usr/install/cp4ba-dev
