@@ -1,6 +1,6 @@
 # Cloud Pak for Business Automation Production deployment manual installation ✍️<!-- omit in toc -->
 
-For version 23.0.2
+For version 23.0.2 iFix 1
 
 Installs BAW and FNCM environment.
 
@@ -77,13 +77,12 @@ and additional utilities for script execution
 
 Requested tooling provided in the install Pod.
 
-- podman
-- openjdk9
-- oc
 - kubectl
+- oc
+- podman
+- IBM Semeru JDK 17
 - yq
 - jq
-- git
 
 ### Creating an install client directly in OCP
 
@@ -152,19 +151,18 @@ spec:
   containers:
     - name: install
       securityContext:
-        privileged: true    
-      image: ubi9/ubi:9.1.0
+        privileged: true
+      image: ubi9/ubi:9.3
       command: ["/bin/bash"]
       args:
         ["-c","cd /usr;
           yum install podman -y;
           yum install ncurses -y;
           yum install jq -y;
-          yum install git -y;
-          curl -O https://download.java.net/java/GA/jdk9/9/binaries/openjdk-9_linux-x64_bin.tar.gz;
-          tar -xvf openjdk-9_linux-x64_bin.tar.gz;
-          ln -fs /usr/jdk-9/bin/java /usr/bin/java;
-          ln -fs /usr/jdk-9/bin/keytool /usr/bin/keytool;
+          curl -LO https://github.com/ibmruntimes/semeru17-binaries/releases/download/jdk-17.0.9%2B9_openj9-0.41.0/ibm-semeru-open-jdk_x64_linux_17.0.9_9_openj9-0.41.0.tar.gz;
+          tar -xvf ibm-semeru-open-jdk_x64_linux_17.0.9_9_openj9-0.41.0.tar.gz;
+          ln -fs /usr/jdk-17.0.9+9/bin/java /usr/bin/java;
+          ln -fs /usr/jdk-17.0.9+9/bin/keytool /usr/bin/keytool;
           curl -k https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz --output oc.tar;
           tar -xvf oc.tar oc;
           chmod u+x oc;
@@ -182,7 +180,6 @@ spec:
           kubectl version;
           yq --version;
           jq --version;
-          git --version;
           while true;
           do echo 'Install pod - Ready - Enter it via Terminal and \"bash\"';
           sleep 300; done"]
@@ -712,11 +709,11 @@ mkdir /usr/install/cp4ba-dev
 
 # Download the package
 curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
-ibm-cp-automation/5.1.0/ibm-cp-automation-5.1.0.tgz \
---output /usr/install/cp4ba-dev/ibm-cp-automation-5.1.0.tgz
+ibm-cp-automation/5.1.1/ibm-cp-automation-5.1.1.tgz \
+--output /usr/install/cp4ba-dev/ibm-cp-automation-5.1.1.tgz
 
 # Extract the package
-tar xzvf /usr/install/cp4ba-dev/ibm-cp-automation-5.1.0.tgz -C /usr/install/cp4ba-dev/
+tar xzvf /usr/install/cp4ba-dev/ibm-cp-automation-5.1.1.tgz -C /usr/install/cp4ba-dev/
 
 # Extract cert-kubernetes
 tar xvf /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
@@ -747,6 +744,7 @@ Select the cloud platform to deploy:
 Enter a valid option [1 to 3]: 2 # Based on your platform
 
 What type of deployment is being performed?
+ATTENTION: The BAI standalone only supports "Production" deployment type.
 1) Starter
 2) Production
 Enter a valid option [1 to 2]: 2
@@ -862,14 +860,12 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-prerequisites.sh -
 Answer as follows.
 ```text
 Tips:Press [ENTER] to accept the default (None of the patterns is selected)
-Enter a valid option [1 to 4, 5a, 5b, 6, 7a, 7b]: 5a
+Enter a valid option [1 to 4, 5a, 5b, 6, 7a, 7b, 8]: 5a
 
 Tips:Press [ENTER] to accept the default (None of the patterns is selected)
-Enter a valid option [1 to 4, 5a, 5b, 6, 7a, 7b]: 1
+Enter a valid option [1 to 4, 5a, 5b, 6, 7a, 7b, 8]: 1
 
 Hit Enter to continue.
-
-Do you want to enable Business Automation Application Data Persistence? (Yes/No): Yes
 
 Pattern "FileNet Content Manager": Select optional components: 
 1) Content Search Services 
@@ -934,7 +930,7 @@ The alias name(s): postgresql
 Where do you want to deploy Cloud Pak for Business Automation?
 Enter the name for an existing project (namespace): cp4ba-dev
 
-Do you want to restrict network egress to unknown external destination for this CP4BA deployment? (Notes: CP4BA 23.0.2 prevents all network egress to unknown destinations by default. You can either (1) enable all egress or (2) accept the new default and create network policies to allow your specific communication targets as documented in the knowledge center.) (Yes/No, default: Yes): No (To allow connectivity to containerized LDAP and DB)
+Do you want to restrict network egress to unknown external destination for this CP4BA deployment? (Notes: CP4BA 23.0.2 prevents all network egress to unknown destinations by default. You can either (1) enable all egress or (2) accept the new default and create network policies to allow your specific communication targets as documented in the knowledge center.) (Yes/No, default: Yes): Yes
 
 How many object stores will be deployed for the content pattern? 1
 
@@ -1096,7 +1092,7 @@ sed -i \
 -e 's/LDAP_USER_NAME_ATTRIBUTE="\*:uid"/LDAP_USER_NAME_ATTRIBUTE="*:cn"/g' \
 -e 's/LDAP_GROUP_BASE_DN="<Required>"/LDAP_GROUP_BASE_DN="ou=Groups,dc=cp,dc=internal"/g' \
 -e 's/LC_USER_FILTER="(\&(cn=%v)(objectclass=person))"/'\
-'LC_USER_FILTER="(\&(uid=%v)(objectclass=inetOrgPerson))"/g' \g' \
+'LC_USER_FILTER="(\&(uid=%v)(objectclass=inetOrgPerson))"/g' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/\
 scripts/cp4ba-prerequisites/propertyfile/cp4ba_LDAP.property
@@ -1153,16 +1149,6 @@ Generate SQL and Secrets
 ```bash
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-prerequisites.sh -m generate
-```
-PostgreSQL instance configured in a way that tablespace path in some of the generated SQL create scripts doesn't need updating.
-
-Update GCD create script table space path
-```bash
-sed -i \
--e 's|/pgsqldata/gcd|/pgsqldata/devgcd|g' \
-/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
-cp4ba-prerequisites/dbscript/fncm/postgresql/postgresql/createGCDDB.sql
 ```
 
 Copy create scripts to PostgreSQL instance
@@ -1368,6 +1354,44 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_c
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=cpd-option-2b-deploying-custom-resource-you-created-deployment-script
 
+Add permissive network policy to enable the deployment to reach to LDAP and DB (TODO - workaround, last needed 23.0.2.1)
+```bash
+echo "
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: custom-permit-db-egress
+  namespace: cp4ba-dev
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector: {}
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cp4ba-postgresql
+" | oc apply -f -
+echo "
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: custom-permit-ldap-egress
+  namespace: cp4ba-dev
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector: {}
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cp4ba-openldap
+" | oc apply -f -
+```
+
 Apply CR  
 ```bash
 oc apply -n cp4ba-dev -f /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
@@ -1530,11 +1554,11 @@ mkdir /usr/install/cp4ba-test
 
 # Download the package
 curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
-ibm-cp-automation/5.1.0/ibm-cp-automation-5.1.0.tgz \
---output /usr/install/cp4ba-test/ibm-cp-automation-5.1.0.tgz
+ibm-cp-automation/5.1.1/ibm-cp-automation-5.1.1.tgz \
+--output /usr/install/cp4ba-test/ibm-cp-automation-5.1.1.tgz
 
 # Extract the package
-tar xzvf /usr/install/cp4ba-test/ibm-cp-automation-5.1.0.tgz -C /usr/install/cp4ba-test/
+tar xzvf /usr/install/cp4ba-test/ibm-cp-automation-5.1.1.tgz -C /usr/install/cp4ba-test/
 
 # Extract cert-kubernetes
 tar xvf /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
@@ -1668,10 +1692,10 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-prerequisites.sh -
 Answer as follows.
 ```text
 Tips:Press [ENTER] to accept the default (None of the patterns is selected)
-Enter a valid option [1 to 4, 5a, 5b, 6, 7a, 7b]: 5b
+Enter a valid option [1 to 4, 5a, 5b, 6, 7a, 7b, 8]: 5b
 
 Tips:Press [ENTER] to accept the default (None of the patterns is selected)
-Enter a valid option [1 to 4, 5a, 5b, 6, 7a, 7b]: 1
+Enter a valid option [1 to 4, 5a, 5b, 6, 7a, 7b, 8]: 1
 
 Hit Enter to continue.
 
@@ -1743,7 +1767,7 @@ Enter the name for an existing project (namespace): cp4ba-test
 Using project cp4ba-test...
 
 
-Do you want to restrict network egress to unknown external destination for this CP4BA deployment? (Notes: CP4BA 23.0.2 prevents all network egress to unknown destinations by default. You can either (1) enable all egress or (2) accept the new default and create network policies to allow your specific communication targets as documented in the knowledge center.) (Yes/No, default: Yes): No
+Do you want to restrict network egress to unknown external destination for this CP4BA deployment? (Notes: CP4BA 23.0.2 prevents all network egress to unknown destinations by default. You can either (1) enable all egress or (2) accept the new default and create network policies to allow your specific communication targets as documented in the knowledge center.) (Yes/No, default: Yes): Yes
 
 How many object stores will be deployed for the content pattern? 1
 
@@ -1867,10 +1891,6 @@ sed -i \
 -e 's/postgresql.CHOS_DB_USER_NAME="<youruser1>"/postgresql.CHOS_DB_USER_NAME="testchos"/g' \
 -e 's/postgresql.CHOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.CHOS_DB_USER_PASSWORD="Password"/g' \
--e 's/postgresql.AEOS_DB_NAME="AEOS"/postgresql.AEOS_DB_NAME="TESTAEOS"/g' \
--e 's/postgresql.AEOS_DB_USER_NAME="<youruser1>"/postgresql.AEOS_DB_USER_NAME="testaeos"/g' \
--e 's/postgresql.AEOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
-'postgresql.AEOS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.ICN_DB_NAME="ICNDB"/postgresql.ICN_DB_NAME="TESTICN"/g' \
 -e 's/postgresql.ICN_DB_USER_NAME="<youruser1>"/postgresql.ICN_DB_USER_NAME="testicn"/g' \
 -e 's/postgresql.ICN_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
@@ -1960,16 +1980,6 @@ Generate SQL and Secrets
 ```bash
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-prerequisites.sh -m generate
-```
-PostgreSQL instance configured in a way that tablespace path in some of the generated SQL create scripts doesn't need updating.
-
-Update GCD create script table space path
-```bash
-sed -i \
--e 's|/pgsqldata/gcd|/pgsqldata/testgcd|g' \
-/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
-cp4ba-prerequisites/dbscript/fncm/postgresql/postgresql/createGCDDB.sql
 ```
 
 Copy create scripts to PostgreSQL instance
@@ -2187,11 +2197,42 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_c
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=cpd-option-2b-deploying-custom-resource-you-created-deployment-script
 
-Fix included application engine part which shoul dnot be there (TODO present in 23.0.2 GA)
+Add permissive network policy to enable the deployment to reach to LDAP and DB (TODO - workaround, last needed 23.0.2.1)
 ```bash
-yq -i 'del(.spec.application_engine_configuration)' \
-/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+echo "
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: custom-permit-db-egress
+  namespace: cp4ba-test
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector: {}
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cp4ba-postgresql
+" | oc apply -f -
+echo "
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: custom-permit-ldap-egress
+  namespace: cp4ba-test
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector: {}
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cp4ba-openldap
+" | oc apply -f -
 ```
 
 Apply CR  
@@ -2391,6 +2432,7 @@ oc get secret router-ca -n openshift-ingress-operator \
 oc create secret generic baw-routerca-secret -n cp4ba-test \
 --from-file=tls.crt=/usr/install/routercaPC.cert
 ```
+
 ```bash
 # Create secret with Workflow Authoring credentials in Test 
 echo "
@@ -2421,6 +2463,7 @@ yq -i '.spec.baw_configuration[0].workflow_center = '\
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
+
 ```bash
 # Configure Workflow Authoring to trust Workflow Runtime TLS
 yq -i '.spec.bastudio_configuration.tls = {"tls_trust_list": '\
@@ -2442,6 +2485,7 @@ yq -i '.spec.workflow_authoring_configuration.environment_config = '\
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
+
 ```bash
 # Apply updated cp4ba-dev CR
 oc apply -n cp4ba-dev -f /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
@@ -2473,4 +2517,4 @@ IBM Czech Republic
 
 ## Notice
 
-© Copyright IBM Corporation 2023.
+© Copyright IBM Corporation 2024.
