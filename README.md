@@ -1534,11 +1534,11 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --
 
 Follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-completing-post-installation-tasks as needed.
 
-Custom CPFS console TLS - follow https://www.ibm.com/docs/en/SSYHZ8_23.0.2/com.ibm.dba.managing/op_topics/tsk_custom_cp4ba_iam.html
+Optional custom CPFS console TLS - follow https://www.ibm.com/docs/en/SSYHZ8_23.0.2/com.ibm.dba.managing/op_topics/tsk_custom_cp4ba_iam.html
 
-Custom CPFS admin password - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=tasks-cloud-pak-foundational-services
+Optional custom CPFS admin password - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=tasks-cloud-pak-foundational-services
 
-Custom Zen certificates - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=security-customizing-cloud-pak-entry-point
+Optional custom Zen certificates - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=security-customizing-cloud-pak-entry-point
 
 ## Cloud Pak for Business Automation Test Environment
 
@@ -2377,11 +2377,11 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --
 
 Follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-completing-post-installation-tasks as needed.
 
-Custom CPFS console TLS - follow https://www.ibm.com/docs/en/SSYHZ8_23.0.2/com.ibm.dba.managing/op_topics/tsk_custom_cp4ba_iam.html
+Optional custom CPFS console TLS - follow https://www.ibm.com/docs/en/SSYHZ8_23.0.2/com.ibm.dba.managing/op_topics/tsk_custom_cp4ba_iam.html
 
-Custom Zen certificates - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=security-customizing-cloud-pak-entry-point
+Optional custom Zen certificates - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=security-customizing-cloud-pak-entry-point
 
-Custom CPFS admin password - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=tasks-cloud-pak-foundational-services
+Optional custom CPFS admin password - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=tasks-cloud-pak-foundational-services
 
 #### Connect to Authoring
 
