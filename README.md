@@ -2466,7 +2466,7 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_c
 
 ```bash
 # Configure Workflow Authoring to trust Workflow Runtime TLS
-yq -i '.spec.bastudio_configuration.tls = {"tls_trust_list": '\
+yq -i '.spec.bastudio_configuration.tls = {"tlsTrustList": '\
 '["bawaut-tls-zen-secret", "bawaut-tls-cs-secret", "bawaut-routerca-secret"]}' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
