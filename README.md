@@ -2464,6 +2464,31 @@ yq -i '.spec.baw_configuration[0].workflow_center = '\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=security-configuring-cluster#task_egd_lwt_wlb__external
+```bash
+# Add permissive Network Policy for Workflow Runtime to be able to reach Workflow Authoring
+# This policy should be further limited to a specific IP of either internal router 
+# if both Runtime and Authoring are running in the same cluster 
+# or to a specific external IP of a different cluster if Runtime and Authroing are running in separate clusters
+echo "
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: icp4adeploy-cp4a-egress-external-app-baw
+  namespace: cp4ba-test
+spec:
+  podSelector:
+    matchLabels:
+      com.ibm.cp4a.networking/egress-external-app-component: BAW
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: TCP
+          port: 443
+" | oc apply -f -
+```
+
 ```bash
 # Configure Workflow Authoring to trust Workflow Runtime TLS
 yq -i '.spec.bastudio_configuration.tls = {"tlsTrustList": '\
@@ -2486,6 +2511,31 @@ yq -i '.spec.workflow_authoring_configuration.environment_config = '\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=security-configuring-cluster#task_egd_lwt_wlb__external
+```bash
+# Add permissive Network Policy for Workflow Authoring to be able to reach Workflow Runtime
+# This policy should be further limited to a specific IP of either internal router 
+# if both Runtime and Authoring are running in the same cluster 
+# or to a specific external IP of a different cluster if Runtime and Authroing are running in separate clusters
+echo "
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: icp4adeploy-cp4a-egress-external-app-bas
+  namespace: cp4ba-dev
+spec:
+  podSelector:
+    matchLabels:
+      com.ibm.cp4a.networking/egress-external-app-component: BAS
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: TCP
+          port: 443
+" | oc apply -f -
+```
+
 ```bash
 # Apply updated cp4ba-dev CR
 oc apply -n cp4ba-dev -f /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
@@ -2498,12 +2548,12 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_c
 
 Now you need to wait for next Operator cycle to propagate the changes from CR to BAW pods in both dev and test environment.
 
-Good indicator of the change for cp4ba-test is existence of WORKFLOWCENTER environment parameters for Workflow Server
+Good indicator of the change for cp4ba-test is existence of WORKFLOWCENTER environment parameter in Workflow Runtime
 ```bash
 oc get statefulset icp4adeploy-bawins1-baw-server -n cp4ba-test -o yaml | grep WORKFLOWCENTER
 ```
 
-Good indicator of the change for cp4ba-dev is existence of bawaut-tls-zen-secret secret mapping for Workflow Authoring
+Good indicator of the change for cp4ba-dev is existence of bawaut-tls-zen-secret secret mapping in Workflow Authoring
 ```bash
 oc get statefulset icp4adeploy-bastudio-deployment -n cp4ba-dev -o yaml | grep bawaut-tls-zen-secret
 ```
