@@ -2241,9 +2241,9 @@ oc apply -n cp4ba-test -f /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
-Wait for the deployment to be completed. This can be determined by looking in Project cp4ba-dev in Kind ICP4ACluster, instance named icp4adeploy to have the following conditions:
+Wait for the deployment to be completed. This can be determined by looking in Project cp4ba-test in Kind ICP4ACluster, instance named icp4adeploy to have the following conditions:
 ```bash
-oc get -n cp4ba-dev icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}" | jq
+oc get -n cp4ba-test icp4acluster icp4adeploy -o=jsonpath="{.status.conditions}" | jq
 ```
 ```json
 [
