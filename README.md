@@ -1,6 +1,6 @@
 # Cloud Pak for Business Automation Production deployment manual installation ✍️<!-- omit in toc -->
 
-For version 23.0.2 iFix 1
+For version 23.0.2 iFix 2
 
 Installs BAW and FNCM environment.
 
@@ -56,7 +56,7 @@ Please do not hesitate to create an issue here if needed. Your feedback is appre
 
 Not for production use. Suitable for Demo and PoC environments - but with Production deployment.
 
-OpenLDAP is not a supported LDAP provider for CP4BA.
+The resulting deployment should be supportable.
 
 ## Preparing your cluster
 
@@ -226,27 +226,6 @@ metadata:
 " | oc apply -f -
 ```
 
-Add required privileged permission
-```bash
-echo "
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: openldap-privileged
-  namespace: cp4ba-openldap
-  labels:
-    app: cp4ba-openldap
-subjects:
-  - kind: ServiceAccount
-    name: default
-    namespace: cp4ba-openldap
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:openshift:scc:privileged
-" | oc apply -f -
-```
-
 Create ConfigMap for env
 ```bash
 echo "
@@ -405,7 +384,6 @@ spec:
           readinessProbe:
             tcpSocket:
               port: ldap-port
-            initialDelaySeconds: 60
             timeoutSeconds: 1
             periodSeconds: 10
             successThreshold: 1
@@ -413,7 +391,6 @@ spec:
           livenessProbe:
             tcpSocket:
               port: ldap-port
-            initialDelaySeconds: 60
             timeoutSeconds: 1
             periodSeconds: 10
             successThreshold: 1
@@ -423,7 +400,7 @@ spec:
             - name: ldap-port
               containerPort: 1389
               protocol: TCP
-          image: 'bitnami/openldap:2.6.5'
+          image: 'bitnami/openldap:2.6.7'
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - name: data
@@ -437,7 +414,14 @@ spec:
             - secretRef:
                 name: openldap
           securityContext:
-            privileged: true
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - NET_BIND_SERVICE
       volumes:
         - name: data
           persistentVolumeClaim:
@@ -709,11 +693,11 @@ mkdir /usr/install/cp4ba-dev
 
 # Download the package
 curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
-ibm-cp-automation/5.1.1/ibm-cp-automation-5.1.1.tgz \
---output /usr/install/cp4ba-dev/ibm-cp-automation-5.1.1.tgz
+ibm-cp-automation/5.1.2/ibm-cp-automation-5.1.2.tgz \
+--output /usr/install/cp4ba-dev/ibm-cp-automation-5.1.2.tgz
 
 # Extract the package
-tar xzvf /usr/install/cp4ba-dev/ibm-cp-automation-5.1.1.tgz -C /usr/install/cp4ba-dev/
+tar xzvf /usr/install/cp4ba-dev/ibm-cp-automation-5.1.2.tgz -C /usr/install/cp4ba-dev/
 
 # Extract cert-kubernetes
 tar xvf /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
@@ -1554,11 +1538,11 @@ mkdir /usr/install/cp4ba-test
 
 # Download the package
 curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
-ibm-cp-automation/5.1.1/ibm-cp-automation-5.1.1.tgz \
---output /usr/install/cp4ba-test/ibm-cp-automation-5.1.1.tgz
+ibm-cp-automation/5.1.2/ibm-cp-automation-5.1.2.tgz \
+--output /usr/install/cp4ba-test/ibm-cp-automation-5.1.2.tgz
 
 # Extract the package
-tar xzvf /usr/install/cp4ba-test/ibm-cp-automation-5.1.1.tgz -C /usr/install/cp4ba-test/
+tar xzvf /usr/install/cp4ba-test/ibm-cp-automation-5.1.2.tgz -C /usr/install/cp4ba-test/
 
 # Extract cert-kubernetes
 tar xvf /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
