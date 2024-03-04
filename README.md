@@ -1,6 +1,7 @@
 # Cloud Pak for Business Automation Production deployment manual installation ✍️<!-- omit in toc -->
 
-For version 23.0.2 iFix 2
+For version 23.0.2 iFix 2 
+https://www.ibm.com/support/pages/node/7114493
 
 Installs BAW and FNCM environment.
 
@@ -55,8 +56,6 @@ Used OpenLDAP and PostgreSQL cannot run on Restricted OCP from CP4BA.
 Please do not hesitate to create an issue here if needed. Your feedback is appreciated.
 
 Not for production use. Suitable for Demo and PoC environments - but with Production deployment.
-
-The resulting deployment should be supportable.
 
 ## Preparing your cluster
 
@@ -213,6 +212,8 @@ You would normally use your own production ready instances.
 Please note that OpenLDAP is working but is not officially supported by CP4BA.
 
 ### OpenLDAP
+
+Deployment of rootless bitnami OpenLDAP
 
 Create cp4ba-openldap Project
 ```bash
@@ -414,6 +415,8 @@ spec:
             - secretRef:
                 name: openldap
           securityContext:
+            seccompProfile:
+              type: RuntimeDefault
             privileged: false
             allowPrivilegeEscalation: false
             runAsNonRoot: true
@@ -465,9 +468,11 @@ oc get pod -n cp4ba-openldap -w
 OpenLDAP
 - See Project cp4ba-openldap, Service openldap for assigned NodePort 
 - cn=admin,dc=cp,dc=internal / Password
-- In OpenLDAP Pod terminal `ldapsearch -x -b "dc=cp,dc=internal" -H ldap://localhost:1389 -D 'cn=admin,dc=cp,dc=internal' -W "objectclass=*"`
+- In OpenLDAP Pod terminal `ldapsearch -x -b "dc=cp,dc=internal" -H ldap://localhost:1389 -D 'cn=admin,dc=cp,dc=internal' -w Password "objectclass=*" '+'`
 
 ### PostgreSQL
+
+Deployment of rootless bitnami PostgreSQL
 
 Create cp4ba-postgresql Project
 ```bash
@@ -481,91 +486,40 @@ metadata:
 " | oc apply -f -
 ```
 
-Add required privileged permission
-```bash
-echo "
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: postgresql-privileged
-  namespace: cp4ba-postgresql
-  labels:
-    app: cp4ba-postgresql
-subjects:
-  - kind: ServiceAccount
-    name: default
-    namespace: cp4ba-postgresql
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:openshift:scc:privileged
-" | oc apply -f -
-```
-
-Create Secret for config
+Create Secret for passwords
 ```bash
 echo "
 kind: Secret
 apiVersion: v1
 metadata:
-  name: postgresql-config
+  name: postgresql-secret
   namespace: cp4ba-postgresql
-  labels:
-    app: cp4ba-postgresql
 stringData:
-  POSTGRES_DB: postgresdb
-  POSTGRES_USER: cpadmin
-  POSTGRES_PASSWORD: Password
+  postgres-password: Password
+type: Opaque
 " | oc apply -f -
 ```
 
-Create PVC for data
+Create ConfigMap for postgresql.conf extension
 ```bash
 echo "
-kind: PersistentVolumeClaim
+kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: postgresql-data
+  name: postgresql-extended-config
   namespace: cp4ba-postgresql
-  labels:
-    app: cp4ba-postgresql
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 5Gi
-  storageClassName: ocs-storagecluster-cephfs
-  volumeMode: Filesystem
+data:
+  override.conf: |
+    max_connections=500
+    max_prepared_transactions=500
 " | oc apply -f -
 ```
 
-Create PVC for table spaces as they should not be in PGDATA
+Create StatefulSet - divided into two parts as it is too long to be handled via single copy paste into OCP Pod terminal
 ```bash
-echo "
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: postgresql-tablespaces
-  namespace: cp4ba-postgresql
-  labels:
-    app: cp4ba-postgresql
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 5Gi
-  storageClassName: ocs-storagecluster-cephfs
-  volumeMode: Filesystem
-" | oc apply -f -
-```
-
-Create StatefulSet
-```bash
-echo "
-apiVersion: apps/v1
+cat >/usr/install/postgresql.yaml <<EOF
 kind: StatefulSet
+apiVersion: apps/v1
 metadata:
   name: postgresql
   namespace: cp4ba-postgresql
@@ -580,70 +534,142 @@ spec:
       labels:
         app: cp4ba-postgresql
     spec:
+      terminationGracePeriodSeconds: 30
       containers:
         - name: postgresql
-          args:
-            - '-c'
-            - max_prepared_transactions=500
-            - '-c'
-            - max_connections=500
           resources:
             limits:
+              cpu: 4000m
               memory: 4Gi
             requests:
+              cpu: 200m
               memory: 4Gi
-          livenessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - exec pg_isready -U \$POSTGRES_USER -d \$POSTGRES_DB
-            failureThreshold: 6
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 5
-          readinessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - exec pg_isready -U \$POSTGRES_USER -d \$POSTGRES_DB
-            failureThreshold: 6
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 5
           startupProbe:
             exec:
               command:
                 - /bin/sh
                 - -c
-                - exec pg_isready -U \$POSTGRES_USER -d \$POSTGRES_DB
+                - -e
+                - >
+                  exec pg_isready
+
+                  [ -f /opt/bitnami/postgresql/tmp/.initialized ] || [ -f
+                  /bitnami/postgresql/.initialized ]
             failureThreshold: 18
-            periodSeconds: 10            
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 6
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 6
+          env:
+            - name: BITNAMI_DEBUG
+              value: 'false'
+            - name: POSTGRESQL_PORT_NUMBER
+              value: '5432'
+            - name: POSTGRESQL_VOLUME_DIR
+              value: /bitnami/postgresql
+            - name: PGDATA
+              value: /bitnami/postgresql/data
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-secret
+                  key: postgres-password
+            - name: POSTGRESQL_ENABLE_LDAP
+              value: 'no'
+            - name: POSTGRESQL_ENABLE_TLS
+              value: 'no'
+            - name: POSTGRESQL_LOG_HOSTNAME
+              value: 'false'
+            - name: POSTGRESQL_LOG_CONNECTIONS
+              value: 'false'
+            - name: POSTGRESQL_LOG_DISCONNECTIONS
+              value: 'false'
+            - name: POSTGRESQL_PGAUDIT_LOG_CATALOG
+              value: 'off'
+            - name: POSTGRESQL_CLIENT_MIN_MESSAGES
+              value: error
+            - name: POSTGRESQL_SHARED_PRELOAD_LIBRARIES
+              value: pgaudit
+EOF
+```
+
+```bash
+cat >>/usr/install/postgresql.yaml <<EOF
           securityContext:
-            privileged: true
-          image: postgres:14.7-alpine3.17
-          imagePullPolicy: IfNotPresent
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
           ports:
-            - containerPort: 5432
-          envFrom:
-            - secretRef:
-                name: postgresql-config
+            - name: tcp-postgresql
+              containerPort: 5432
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
           volumeMounts:
-            - mountPath: /var/lib/postgresql/data
-              name: postgresql-data
-            - mountPath: /pgsqldata
-              name: postgresql-tablespaces
+            - name: empty-dir
+              mountPath: /tmp
+              subPath: tmp-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/postgresql/conf
+              subPath: app-conf-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/postgresql/tmp
+              subPath: app-tmp-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/postgresql/logs
+              subPath: app-logs-dir
+            - name: data
+              mountPath: /bitnami/postgresql
+            - name: postgresql-extended-config
+              mountPath: /bitnami/postgresql/conf/conf.d/          
+          terminationMessagePolicy: File
+          image: 'docker.io/bitnami/postgresql:14.11.0-debian-12-r6'
       volumes:
-        - name: postgresql-data
-          persistentVolumeClaim:
-            claimName: postgresql-data
-        - name: postgresql-tablespaces
-          persistentVolumeClaim:
-            claimName: postgresql-tablespaces
-" | oc apply -f -
+        - name: empty-dir
+          emptyDir: {}
+        - name: postgresql-extended-config
+          configMap:
+            name: postgresql-extended-config
+            defaultMode: 420
+  volumeClaimTemplates:
+    - kind: PersistentVolumeClaim
+      apiVersion: v1
+      metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: ocs-storagecluster-cephfs
+        resources:
+          requests:
+            storage: 5Gi
+        volumeMode: Filesystem
+EOF
+```
+
+```bash
+oc apply -f /usr/install/postgresql.yaml
 ```
 
 Create Service
@@ -670,12 +696,18 @@ Wait for pod in *cp4ba-postgresql* Project to become Ready 1/1.
 oc get pod -n cp4ba-postgresql -w
 ```
 
+Create folder for tablespaces
+```bash
+oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
+'mkdir /bitnami/postgresql/tablespaces;'
+```
+
 #### Access info after deployment
 
 PostgreSQL
-- See Project cp4ba-postgresql, Service postgresql for assigned NodePort 
-- cpadmin / Password
-- In PostgreSQL Pod terminal `psql postgresql://cpadmin@localhost:5432/postgresdb`
+- See Project cp4ba-postgresql, Service postgresql for assigned NodePort
+- postgres / Password
+- In PostgreSQL Pod terminal `psql postgresql://postgres@localhost:5432`
 
 ## Cloud Pak for Business Automation Development Environment
 
@@ -1006,9 +1038,7 @@ cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
 cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
-```
 
-```bash
 # Update generated file with real values
 sed -i \
 -e 's/postgresql.GCD_DB_NAME="GCDDB"/postgresql.GCD_DB_NAME="DEVGCD"/g' \
@@ -1031,13 +1061,6 @@ sed -i \
 -e 's/postgresql.BAWTOS_DB_USER_NAME="<youruser1>"/postgresql.BAWTOS_DB_USER_NAME="devbawtos"/g' \
 -e 's/postgresql.BAWTOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.BAWTOS_DB_USER_PASSWORD="Password"/g' \
-/usr/install/cp4ba-dev/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/\
-cert-kubernetes/scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
-```
-
-```bash
-# Update generated file with real values
-sed -i \
 -e 's/postgresql.CHOS_DB_NAME="CHOS"/postgresql.CHOS_DB_NAME="DEVCHOS"/g' \
 -e 's/postgresql.CHOS_DB_USER_NAME="<youruser1>"/postgresql.CHOS_DB_USER_NAME="devchos"/g' \
 -e 's/postgresql.CHOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
@@ -1073,7 +1096,6 @@ sed -i \
 -e 's/LDAP_BIND_DN="<Required>"/LDAP_BIND_DN="cn=admin,dc=cp,dc=internal"/g' \
 -e 's/LDAP_BIND_DN_PASSWORD="{Base64}<Required>"/LDAP_BIND_DN_PASSWORD="Password"/g' \
 -e 's/LDAP_SSL_ENABLED="True"/LDAP_SSL_ENABLED="False"/g' \
--e 's/LDAP_USER_NAME_ATTRIBUTE="\*:uid"/LDAP_USER_NAME_ATTRIBUTE="*:cn"/g' \
 -e 's/LDAP_GROUP_BASE_DN="<Required>"/LDAP_GROUP_BASE_DN="ou=Groups,dc=cp,dc=internal"/g' \
 -e 's/LC_USER_FILTER="(\&(cn=%v)(objectclass=person))"/'\
 'LC_USER_FILTER="(\&(uid=%v)(objectclass=inetOrgPerson))"/g' \
@@ -1135,6 +1157,13 @@ Generate SQL and Secrets
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-prerequisites.sh -m generate
 ```
 
+Update tablespace path
+```bash
+find /usr/install/cp4ba-dev/ibm-cp-automation/inventory/cp4aOperatorSdk/files/\
+deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/dbscript -name '*.sql' \
+| xargs sed -i 's|/pgsqldata|/bitnami/postgresql/tablespaces|g'
+```
+
 Copy create scripts to PostgreSQL instance
 ```bash
 oc cp /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
@@ -1146,51 +1175,51 @@ Execute create scripts with table space directory creation
 ```bash
 # Studio
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
+'psql postgresql://postgres:Password@localhost:5432/postgres \
 --file=/usr/dbscript-dev/bas/postgresql/postgresql/create_bas_studio_db.sql'
 
 # BAW authoring DOCS
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/devbawdocs; chown postgres:postgres /pgsqldata/devbawdocs;'
+'mkdir /bitnami/postgresql/tablespaces/devbawdocs;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
+'psql postgresql://postgres:Password@localhost:5432/postgres \
 --file=/usr/dbscript-dev/fncm/postgresql/postgresql/createDEVBAWDOCS.sql'
 
 # BAW authoring DOS
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/devbawdos; chown postgres:postgres /pgsqldata/devbawdos;'
+'mkdir /bitnami/postgresql/tablespaces/devbawdos;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
+'psql postgresql://postgres:Password@localhost:5432/postgres \
 --file=/usr/dbscript-dev/fncm/postgresql/postgresql/createDEVBAWDOS.sql'
 
 # BAW authoring TOS
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/devbawtos; chown postgres:postgres /pgsqldata/devbawtos;'
+'mkdir /bitnami/postgresql/tablespaces/devbawtos;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
+'psql postgresql://postgres:Password@localhost:5432/postgres \
 --file=/usr/dbscript-dev/fncm/postgresql/postgresql/createDEVBAWTOS.sql'
 ```
 
 ```bash
 # Navigator
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/devicn; chown postgres:postgres /pgsqldata/devicn;'
+'mkdir /bitnami/postgresql/tablespaces/devicn;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
+'psql postgresql://postgres:Password@localhost:5432/postgres \
 --file=/usr/dbscript-dev/ban/postgresql/postgresql/createICNDB.sql'
 
 # FNCM OS1
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/devos1; chown postgres:postgres /pgsqldata/devos1;'
+'mkdir /bitnami/postgresql/tablespaces/devos1;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
+'psql postgresql://postgres:Password@localhost:5432/postgres \
 --file=/usr/dbscript-dev/fncm/postgresql/postgresql/createOS1DB.sql'
 
 # FNCM GCD
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/devgcd; chown postgres:postgres /pgsqldata/devgcd;'
+'mkdir /bitnami/postgresql/tablespaces/devgcd;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
+'psql postgresql://postgres:Password@localhost:5432/postgres \
 --file=/usr/dbscript-dev/fncm/postgresql/postgresql/createGCDDB.sql'
 ```
 
@@ -1320,6 +1349,13 @@ Change LDAP sub settings from tds to custom
 ```bash
 sed -i \
 -e 's/tds:/custom:/g' \
+/usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+```
+
+Remove SCIM configuration as we do not need to make changes
+```bash
+yq -i 'del(.spec.scim_configuration_iam)' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
@@ -1838,9 +1874,7 @@ cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
 cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property.bak
-```
 
-```bash
 # Update generated file with real values
 sed -i \
 -e 's/postgresql.GCD_DB_NAME="GCDDB"/postgresql.GCD_DB_NAME="TESTGCD"/g' \
@@ -1863,14 +1897,6 @@ sed -i \
 -e 's/postgresql.BAWTOS_DB_USER_NAME="<youruser1>"/postgresql.BAWTOS_DB_USER_NAME="testbawtos"/g' \
 -e 's/postgresql.BAWTOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.BAWTOS_DB_USER_PASSWORD="Password"/g' \
-/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
-cp4ba-prerequisites/propertyfile/cp4ba_db_name_user.property
-```
-
-```bash
-# Update generated file with real values
-sed -i \
 -e 's/postgresql.CHOS_DB_NAME="CHOS"/postgresql.CHOS_DB_NAME="TESTCHOS"/g' \
 -e 's/postgresql.CHOS_DB_USER_NAME="<youruser1>"/postgresql.CHOS_DB_USER_NAME="testchos"/g' \
 -e 's/postgresql.CHOS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
@@ -1906,7 +1932,6 @@ sed -i \
 -e 's/LDAP_BIND_DN="<Required>"/LDAP_BIND_DN="cn=admin,dc=cp,dc=internal"/g' \
 -e 's/LDAP_BIND_DN_PASSWORD="{Base64}<Required>"/LDAP_BIND_DN_PASSWORD="Password"/g' \
 -e 's/LDAP_SSL_ENABLED="True"/LDAP_SSL_ENABLED="False"/g' \
--e 's/LDAP_USER_NAME_ATTRIBUTE="\*:uid"/LDAP_USER_NAME_ATTRIBUTE="*:cn"/g' \
 -e 's/LDAP_GROUP_BASE_DN="<Required>"/LDAP_GROUP_BASE_DN="ou=Groups,dc=cp,dc=internal"/g' \
 -e 's/LC_USER_FILTER="(\&(cn=%v)(objectclass=person))"/'\
 'LC_USER_FILTER="(\&(uid=%v)(objectclass=inetOrgPerson))"/g' \
@@ -1966,6 +1991,13 @@ Generate SQL and Secrets
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-prerequisites.sh -m generate
 ```
 
+Update tablespace path
+```bash
+find /usr/install/cp4ba-test/ibm-cp-automation/inventory/cp4aOperatorSdk/files/\
+deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/dbscript -name '*.sql' \
+| xargs sed -i 's|/pgsqldata|/bitnami/postgresql/tablespaces|g'
+```
+
 Copy create scripts to PostgreSQL instance
 ```bash
 oc cp /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
@@ -1977,51 +2009,51 @@ Execute create scripts with table space directory creation
 ```bash
 # BAW runtime
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
+'psql postgresql://postgres:Password@localhost:5432/postgres \
 --file=/usr/dbscript-test/baw-aws/postgresql/postgresql/create_baw_db_instance1_for_baw.sql'
 
 # BAW runtime DOCS
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/testbawdocs; chown postgres:postgres /pgsqldata/testbawdocs;'
+'mkdir /bitnami/postgresql/tablespaces/testbawdocs;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
+'psql postgresql://postgres:Password@localhost:5432/postgres \
 --file=/usr/dbscript-test/fncm/postgresql/postgresql/createTESTBAWDOCS.sql'
 
 # BAW runtime DOS
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/testbawdos; chown postgres:postgres /pgsqldata/testbawdos;'
+'mkdir /bitnami/postgresql/tablespaces/testbawdos;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
+'psql postgresql://postgres:Password@localhost:5432/postgres \
 --file=/usr/dbscript-test/fncm/postgresql/postgresql/createTESTBAWDOS.sql'
 
 # BAW runtime TOS
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/testbawtos; chown postgres:postgres /pgsqldata/testbawtos;'
+'mkdir /bitnami/postgresql/tablespaces/testbawtos;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
+'psql postgresql://postgres:Password@localhost:5432/postgres \
 --file=/usr/dbscript-test/fncm/postgresql/postgresql/createTESTBAWTOS.sql'
 ```
 
 ```bash
 # Navigator
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/testicn; chown postgres:postgres /pgsqldata/testicn;'
+'mkdir /bitnami/postgresql/tablespaces/testicn;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
+'psql postgresql://postgres:Password@localhost:5432/postgres \
 --file=/usr/dbscript-test/ban/postgresql/postgresql/createICNDB.sql'
 
 # FNCM OS1
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/testos1; chown postgres:postgres /pgsqldata/testos1;'
+'mkdir /bitnami/postgresql/tablespaces/testos1;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
+'psql postgresql://postgres:Password@localhost:5432/postgres \
 --file=/usr/dbscript-test/fncm/postgresql/postgresql/createOS1DB.sql'
 
 # FNCM GCD
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'mkdir /pgsqldata/testgcd; chown postgres:postgres /pgsqldata/testgcd;'
+'mkdir /bitnami/postgresql/tablespaces/testgcd;'
 oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
-'psql postgresql://cpadmin@localhost:5432/postgresdb \
+'psql postgresql://postgres:Password@localhost:5432/postgres \
 --file=/usr/dbscript-test/fncm/postgresql/postgresql/createGCDDB.sql'
 ```
 
@@ -2163,6 +2195,13 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=p
 Set env type to Test
 ```bash
 yq -i '.spec.baw_configuration[0].env_type = "Test"' \
+/usr/install/cp4ba-test/ibm-cp-automation/inventory/\
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
+```
+
+Remove SCIM configuration as we do not need to make changes
+```bash
+yq -i 'del(.spec.scim_configuration_iam)' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
