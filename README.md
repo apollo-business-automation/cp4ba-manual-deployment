@@ -468,7 +468,8 @@ oc get pod -n cp4ba-openldap -w
 OpenLDAP
 - See Project cp4ba-openldap, Service openldap for assigned NodePort 
 - cn=admin,dc=cp,dc=internal / Password
-- In OpenLDAP Pod terminal `ldapsearch -x -b "dc=cp,dc=internal" -H ldap://localhost:1389 -D 'cn=admin,dc=cp,dc=internal' -w Password "objectclass=*" '+'`
+- In OpenLDAP Pod terminal for regular attributes `ldapsearch -x -b "dc=cp,dc=internal" -H ldap://localhost:1389 -D 'cn=admin,dc=cp,dc=internal' -w Password "objectclass=*"`
+- In OpenLDAP Pod terminal for hidden attributes `ldapsearch -x -b "dc=cp,dc=internal" -H ldap://localhost:1389 -D 'cn=admin,dc=cp,dc=internal' -w Password "objectclass=*" '+'`
 
 ### PostgreSQL
 
@@ -1353,7 +1354,7 @@ sed -i \
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
-Remove SCIM configuration as we do not need to make changes
+Remove SCIM configuration as we do not need to make changes. For real deployments one needs to configure this section following the guidance at https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=parameters-ldap-configuration#ldap_kubernetes__scim__title__1
 ```bash
 yq -i 'del(.spec.scim_configuration_iam)' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
@@ -2199,7 +2200,7 @@ yq -i '.spec.baw_configuration[0].env_type = "Test"' \
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 ```
 
-Remove SCIM configuration as we do not need to make changes
+Remove SCIM configuration as we do not need to make changes. For real deployments one needs to configure this section following the guidance at https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=parameters-ldap-configuration#ldap_kubernetes__scim__title__1
 ```bash
 yq -i 'del(.spec.scim_configuration_iam)' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
