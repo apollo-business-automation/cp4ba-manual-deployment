@@ -1875,7 +1875,8 @@ sed -i \
 -e 's/postgresql.OS1_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.OS1_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOCS_DB_NAME="BAWDOCS"/postgresql.BAWDOCS_DB_NAME="TESTBAWDOCS"/g' \
--e 's/postgresql.BAWDOCS_DB_USER_NAME="<youruser1>"/postgresql.BAWDOCS_DB_USER_NAME="testbawdocs"/g' \
+-e 's/postgresql.BAWDOCS_DB_USER_NAME="<youruser1>"/'\
+'postgresql.BAWDOCS_DB_USER_NAME="testbawdocs"/g' \
 -e 's/postgresql.BAWDOCS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.BAWDOCS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOS_DB_NAME="BAWDOS"/postgresql.BAWDOS_DB_NAME="TESTBAWDOS"/g' \
