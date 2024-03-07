@@ -1024,7 +1024,8 @@ sed -i \
 'postgresql.DATABASE_SERVERNAME="postgresql.cp4ba-postgresql.svc.cluster.local"/g' \
 -e 's/postgresql.DATABASE_PORT="<Required>"/postgresql.DATABASE_PORT="5432"/g' \
 -e 's/postgresql.DATABASE_SSL_ENABLE="True"/postgresql.DATABASE_SSL_ENABLE="False"/g' \
--e 's/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="True"/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="False"/g' \
+-e 's/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="True"/'\
+'postgresql.POSTGRESQL_SSL_CLIENT_SERVER="False"/g' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/\
 scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property
@@ -1051,7 +1052,8 @@ sed -i \
 -e 's/postgresql.OS1_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.OS1_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOCS_DB_NAME="BAWDOCS"/postgresql.BAWDOCS_DB_NAME="DEVBAWDOCS"/g' \
--e 's/postgresql.BAWDOCS_DB_USER_NAME="<youruser1>"/postgresql.BAWDOCS_DB_USER_NAME="devbawdocs"/g' \
+-e 's/postgresql.BAWDOCS_DB_USER_NAME="<youruser1>"/'\
+'postgresql.BAWDOCS_DB_USER_NAME="devbawdocs"/g' \
 -e 's/postgresql.BAWDOCS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.BAWDOCS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOS_DB_NAME="BAWDOS"/postgresql.BAWDOS_DB_NAME="DEVBAWDOS"/g' \
@@ -1842,7 +1844,8 @@ sed -i \
 'postgresql.DATABASE_SERVERNAME="postgresql.cp4ba-postgresql.svc.cluster.local"/g' \
 -e 's/postgresql.DATABASE_PORT="<Required>"/postgresql.DATABASE_PORT="5432"/g' \
 -e 's/postgresql.DATABASE_SSL_ENABLE="True"/postgresql.DATABASE_SSL_ENABLE="False"/g' \
--e 's/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="True"/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="False"/g' \
+-e 's/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="True"/'\
+'postgresql.POSTGRESQL_SSL_CLIENT_SERVER="False"/g' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
 cp4ba-prerequisites/propertyfile/cp4ba_db_server.property
@@ -1889,7 +1892,8 @@ sed -i \
 -e 's/postgresql.ICN_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.ICN_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAW_RUNTIME_DB_NAME="BAWDB"/postgresql.BAW_RUNTIME_DB_NAME="TESTBAW"/g' \
--e 's/postgresql.BAW_RUNTIME_DB_USER_NAME="<youruser1>"/postgresql.BAW_RUNTIME_DB_USER_NAME="testbaw"/g' \
+-e 's/postgresql.BAW_RUNTIME_DB_USER_NAME="<youruser1>"/'\
+'postgresql.BAW_RUNTIME_DB_USER_NAME="testbaw"/g' \
 -e 's/postgresql.BAW_RUNTIME_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.BAW_RUNTIME_DB_USER_PASSWORD="Password"/g' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/\
