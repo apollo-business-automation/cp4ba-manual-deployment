@@ -1171,7 +1171,8 @@ Copy create scripts to PostgreSQL instance
 ```bash
 oc cp /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/dbscript \
-cp4ba-postgresql/$(oc get pods --namespace cp4ba-postgresql -o name | cut -d"/" -f2):/usr/dbscript-dev
+cp4ba-postgresql/\
+$(oc get pods --namespace cp4ba-postgresql -o name | cut -d"/" -f2):/usr/dbscript-dev
 ```
 
 Execute create scripts with table space directory creation
@@ -1989,7 +1990,8 @@ Copy create scripts to PostgreSQL instance
 ```bash
 oc cp /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/dbscript \
-cp4ba-postgresql/$(oc get pods --namespace cp4ba-postgresql -o name | cut -d"/" -f2):/usr/dbscript-test
+cp4ba-postgresql/\
+$(oc get pods --namespace cp4ba-postgresql -o name | cut -d"/" -f2):/usr/dbscript-test
 ```
 
 Execute create scripts with table space directory creation
