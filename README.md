@@ -1024,7 +1024,8 @@ sed -i \
 'postgresql.DATABASE_SERVERNAME="postgresql.cp4ba-postgresql.svc.cluster.local"/g' \
 -e 's/postgresql.DATABASE_PORT="<Required>"/postgresql.DATABASE_PORT="5432"/g' \
 -e 's/postgresql.DATABASE_SSL_ENABLE="True"/postgresql.DATABASE_SSL_ENABLE="False"/g' \
--e 's/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="True"/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="False"/g' \
+-e 's/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="True"/'\
+'postgresql.POSTGRESQL_SSL_CLIENT_SERVER="False"/g' \
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/\
 scripts/cp4ba-prerequisites/propertyfile/cp4ba_db_server.property
@@ -1051,7 +1052,8 @@ sed -i \
 -e 's/postgresql.OS1_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.OS1_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOCS_DB_NAME="BAWDOCS"/postgresql.BAWDOCS_DB_NAME="DEVBAWDOCS"/g' \
--e 's/postgresql.BAWDOCS_DB_USER_NAME="<youruser1>"/postgresql.BAWDOCS_DB_USER_NAME="devbawdocs"/g' \
+-e 's/postgresql.BAWDOCS_DB_USER_NAME="<youruser1>"/'\
+'postgresql.BAWDOCS_DB_USER_NAME="devbawdocs"/g' \
 -e 's/postgresql.BAWDOCS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.BAWDOCS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOS_DB_NAME="BAWDOS"/postgresql.BAWDOS_DB_NAME="DEVBAWDOS"/g' \
@@ -1169,7 +1171,8 @@ Copy create scripts to PostgreSQL instance
 ```bash
 oc cp /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/dbscript \
-cp4ba-postgresql/$(oc get pods --namespace cp4ba-postgresql -o name | cut -d"/" -f2):/usr/dbscript-dev
+cp4ba-postgresql/\
+$(oc get pods --namespace cp4ba-postgresql -o name | cut -d"/" -f2):/usr/dbscript-dev
 ```
 
 Execute create scripts with table space directory creation
@@ -1375,13 +1378,13 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_c
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=cpd-option-2b-deploying-custom-resource-you-created-deployment-script
 
-Add permissive network policy to enable the deployment to reach to LDAP and DB (TODO - workaround, last needed 23.0.2.1)
+Add permissive network policy to enable anything from cp4ba-dev namespace to reach to anything (TODO - workaround, last needed 23.0.2.2 - will be removed)
 ```bash
 echo "
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
-  name: custom-permit-db-egress
+  name: custom-permit-all-egress
   namespace: cp4ba-dev
 spec:
   podSelector: {}
@@ -1389,27 +1392,9 @@ spec:
     - Egress
   egress:
     - to:
-        - podSelector: {}
-          namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: cp4ba-postgresql
-" | oc apply -f -
-echo "
-kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
-metadata:
-  name: custom-permit-ldap-egress
-  namespace: cp4ba-dev
-spec:
-  podSelector: {}
-  policyTypes:
-    - Egress
-  egress:
-    - to:
-        - podSelector: {}
-          namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: cp4ba-openldap
+        - ipBlock:
+            cidr: '10.2.1.0/0'
+            except: []
 " | oc apply -f -
 ```
 
@@ -1499,7 +1484,8 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --
 Perform setup for cp4a-post-install.sh script
 ```bash
 # Get apps endpoint of your openshift
-apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-dev -o jsonpath='{.spec.domain}'`
+apps_endpoint=`oc get ingress.v1.config.openshift.io cluster \
+-n cp4ba-dev -o jsonpath='{.spec.domain}'`
 echo $apps_endpoint
 
 # Get CPFS token
@@ -1508,7 +1494,8 @@ cpfs_token=`curl --silent -k --header 'Content-Type: application/x-www-form-urle
 --data-urlencode 'username=cpadmin' \
 --data-urlencode 'password=Password' \
 --data-urlencode 'scope=openid' \
-https://cp-console-cp4ba-dev.${apps_endpoint}/idprovider/v1/auth/identitytoken | jq -r ".access_token"`
+https://cp-console-cp4ba-dev.${apps_endpoint}/idprovider/v1/auth/identitytoken \
+| jq -r ".access_token"`
 echo $cpfs_token
 
 # Exchange CPFS token for Zen token
@@ -1548,7 +1535,7 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --console
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --probe # Y to continue
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --probe #Y to continue
 ```
 
 ### Next steps
@@ -1860,7 +1847,8 @@ sed -i \
 'postgresql.DATABASE_SERVERNAME="postgresql.cp4ba-postgresql.svc.cluster.local"/g' \
 -e 's/postgresql.DATABASE_PORT="<Required>"/postgresql.DATABASE_PORT="5432"/g' \
 -e 's/postgresql.DATABASE_SSL_ENABLE="True"/postgresql.DATABASE_SSL_ENABLE="False"/g' \
--e 's/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="True"/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="False"/g' \
+-e 's/postgresql.POSTGRESQL_SSL_CLIENT_SERVER="True"/'\
+'postgresql.POSTGRESQL_SSL_CLIENT_SERVER="False"/g' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/\
 cp4ba-prerequisites/propertyfile/cp4ba_db_server.property
@@ -1887,7 +1875,8 @@ sed -i \
 -e 's/postgresql.OS1_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.OS1_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOCS_DB_NAME="BAWDOCS"/postgresql.BAWDOCS_DB_NAME="TESTBAWDOCS"/g' \
--e 's/postgresql.BAWDOCS_DB_USER_NAME="<youruser1>"/postgresql.BAWDOCS_DB_USER_NAME="testbawdocs"/g' \
+-e 's/postgresql.BAWDOCS_DB_USER_NAME="<youruser1>"/'\
+'postgresql.BAWDOCS_DB_USER_NAME="testbawdocs"/g' \
 -e 's/postgresql.BAWDOCS_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.BAWDOCS_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAWDOS_DB_NAME="BAWDOS"/postgresql.BAWDOS_DB_NAME="TESTBAWDOS"/g' \
@@ -1907,7 +1896,8 @@ sed -i \
 -e 's/postgresql.ICN_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.ICN_DB_USER_PASSWORD="Password"/g' \
 -e 's/postgresql.BAW_RUNTIME_DB_NAME="BAWDB"/postgresql.BAW_RUNTIME_DB_NAME="TESTBAW"/g' \
--e 's/postgresql.BAW_RUNTIME_DB_USER_NAME="<youruser1>"/postgresql.BAW_RUNTIME_DB_USER_NAME="testbaw"/g' \
+-e 's/postgresql.BAW_RUNTIME_DB_USER_NAME="<youruser1>"/'\
+'postgresql.BAW_RUNTIME_DB_USER_NAME="testbaw"/g' \
 -e 's/postgresql.BAW_RUNTIME_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.BAW_RUNTIME_DB_USER_PASSWORD="Password"/g' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/cp4aOperatorSdk/files/deploy/crs/\
@@ -2003,7 +1993,8 @@ Copy create scripts to PostgreSQL instance
 ```bash
 oc cp /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4ba-prerequisites/dbscript \
-cp4ba-postgresql/$(oc get pods --namespace cp4ba-postgresql -o name | cut -d"/" -f2):/usr/dbscript-test
+cp4ba-postgresql/\
+$(oc get pods --namespace cp4ba-postgresql -o name | cut -d"/" -f2):/usr/dbscript-test
 ```
 
 Execute create scripts with table space directory creation
@@ -2221,13 +2212,13 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_c
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=cpd-option-2b-deploying-custom-resource-you-created-deployment-script
 
-Add permissive network policy to enable the deployment to reach to LDAP and DB (TODO - workaround, last needed 23.0.2.1)
+Add permissive network policy to enable anything from cp4ba-test namespace to reach to anything (TODO - workaround, last needed 23.0.2.2 - will be removed)
 ```bash
 echo "
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
-  name: custom-permit-db-egress
+  name: custom-permit-all-egress
   namespace: cp4ba-test
 spec:
   podSelector: {}
@@ -2235,27 +2226,9 @@ spec:
     - Egress
   egress:
     - to:
-        - podSelector: {}
-          namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: cp4ba-postgresql
-" | oc apply -f -
-echo "
-kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
-metadata:
-  name: custom-permit-ldap-egress
-  namespace: cp4ba-test
-spec:
-  podSelector: {}
-  policyTypes:
-    - Egress
-  egress:
-    - to:
-        - podSelector: {}
-          namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: cp4ba-openldap
+        - ipBlock:
+            cidr: '10.2.1.0/0'
+            except: []
 " | oc apply -f -
 ```
 
@@ -2345,7 +2318,8 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --
 Perform setup for cp4a-post-install.sh script
 ```bash
 # Get apps endpoint of your openshift
-apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-dev -o jsonpath='{.spec.domain}'`
+apps_endpoint=`oc get ingress.v1.config.openshift.io cluster \
+-n cp4ba-dev -o jsonpath='{.spec.domain}'`
 echo $apps_endpoint
 
 # Get CPFS token
@@ -2354,7 +2328,8 @@ cpfs_token=`curl --silent -k --header 'Content-Type: application/x-www-form-urle
 --data-urlencode 'username=cpadmin' \
 --data-urlencode 'password=Password' \
 --data-urlencode 'scope=openid' \
-https://cp-console-cp4ba-test.${apps_endpoint}/idprovider/v1/auth/identitytoken | jq -r ".access_token"`
+https://cp-console-cp4ba-test.${apps_endpoint}/idprovider/v1/auth/identitytoken \
+| jq -r ".access_token"`
 echo $cpfs_token
 
 # Exchange CPFS token for Zen token
@@ -2394,7 +2369,7 @@ cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --console
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
-cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --probe # Y to continue
+cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/cp4a-post-install.sh --probe #Y to continue
 ```
 
 ### Next steps
@@ -2472,12 +2447,14 @@ stringData:
 " | oc apply -f -
 
 # Configure Workflow Runtime to trust Workflow Authoring TLS
-yq -i '.spec.baw_configuration[0].tls = {"tls_trust_list": ["baw-tls-zen-secret", "baw-routerca-secret"]}' \
+yq -i '.spec.baw_configuration[0].tls = {"tls_trust_list": '\
+'["baw-tls-zen-secret", "baw-routerca-secret"]}' \
 /usr/install/cp4ba-test/ibm-cp-automation/inventory/\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 
 # Get apps endpoint of your openshift
-apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-dev -o jsonpath='{.spec.domain}'`
+apps_endpoint=`oc get ingress.v1.config.openshift.io cluster \
+-n cp4ba-dev -o jsonpath='{.spec.domain}'`
 echo $apps_endpoint
 
 # Configure Workflow Runtime to be able to connect to Workflow Authoring
@@ -2493,7 +2470,8 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=s
 # Add permissive Network Policy for Workflow Runtime to be able to reach Workflow Authoring
 # This policy should be further limited to a specific IP of either internal router 
 # if both Runtime and Authoring are running in the same cluster 
-# or to a specific external IP of a different cluster if Runtime and Authroing are running in separate clusters
+# or to a specific external IP of a different cluster if Runtime and Authroing
+# are running in separate clusters
 echo "
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
@@ -2521,12 +2499,14 @@ yq -i '.spec.bastudio_configuration.tls = {"tlsTrustList": '\
 cp4aOperatorSdk/files/deploy/crs/cert-kubernetes/scripts/generated-cr/ibm_cp4a_cr_final.yaml
 
 # Get apps endpoint of your openshift
-apps_endpoint=`oc get ingress.v1.config.openshift.io cluster -n cp4ba-test -o jsonpath='{.spec.domain}'`
+apps_endpoint=`oc get ingress.v1.config.openshift.io cluster \
+-n cp4ba-test -o jsonpath='{.spec.domain}'`
 echo $apps_endpoint
 
 # Configure Workflow Authoring to trust Workflow Runtime URLs
 yq -i '.spec.workflow_authoring_configuration.environment_config = '\
-'{"content_security_policy_additional_all":["https://cpd-cp4ba-test.'$apps_endpoint'/baw-bawins1/"],'\
+'{"content_security_policy_additional_all":'\
+'["https://cpd-cp4ba-test.'$apps_endpoint'/baw-bawins1/"],'\
 '"csrf":{"origin_allowlist":'\
 '"https://cpd-cp4ba-test.'$apps_endpoint',https://cp-console-cp4ba-test.'$apps_endpoint'",'\
 '"referer_allowlist":'\
@@ -2540,7 +2520,8 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=s
 # Add permissive Network Policy for Workflow Authoring to be able to reach Workflow Runtime
 # This policy should be further limited to a specific IP of either internal router 
 # if both Runtime and Authoring are running in the same cluster 
-# or to a specific external IP of a different cluster if Runtime and Authroing are running in separate clusters
+# or to a specific external IP of a different cluster if Runtime and Authroing
+# are running in separate clusters
 echo "
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
