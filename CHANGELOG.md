@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## 2024-03-12
+
+### Fixed
+
+- Changed Network Policy for communication with LDAP and DB and make it non-blocking for operators
+
 ## 2024-03-04
 
 ### Added
