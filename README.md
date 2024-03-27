@@ -15,7 +15,7 @@ Installs BAW and FNCM environment.
     - [Access info after deployment](#access-info-after-deployment)
   - [PostgreSQL](#postgresql)
     - [Access info after deployment](#access-info-after-deployment-1)
-- [Cloud Pak for Business Automation Development Environment](#cloud-pak-for-business-automation-development-environment)
+- [Cloud Pak for Business Automation Development Environment (Authoring)](#cloud-pak-for-business-automation-development-environment-authoring)
   - [Preparing a client to connect to the cluster](#preparing-a-client-to-connect-to-the-cluster-1)
   - [Setting up the cluster by running a script](#setting-up-the-cluster-by-running-a-script)
   - [Prepare property files](#prepare-property-files)
@@ -28,7 +28,7 @@ Installs BAW and FNCM environment.
   - [Completing post-installation tasks](#completing-post-installation-tasks)
   - [Validating your production deployment](#validating-your-production-deployment)
   - [Next steps](#next-steps)
-- [Cloud Pak for Business Automation Test Environment](#cloud-pak-for-business-automation-test-environment)
+- [Cloud Pak for Business Automation Test Environment (Runtime)](#cloud-pak-for-business-automation-test-environment-runtime)
   - [Preparing a client to connect to the cluster](#preparing-a-client-to-connect-to-the-cluster-2)
   - [Setting up the cluster by running a script](#setting-up-the-cluster-by-running-a-script-1)
   - [Prepare property files](#prepare-property-files-1)
@@ -85,7 +85,7 @@ Requested tooling provided in the install Pod.
 
 ### Creating an install client directly in OCP
 
-In you OCP cluster create Project *cp4ba-install* using OpenShift console.
+In your OCP cluster create Project *cp4ba-install* using OpenShift console.
 ```yaml
 kind: Project
 apiVersion: project.openshift.io/v1
@@ -710,7 +710,7 @@ PostgreSQL
 - postgres / Password
 - In PostgreSQL Pod terminal `psql postgresql://postgres@localhost:5432`
 
-## Cloud Pak for Business Automation Development Environment
+## Cloud Pak for Business Automation Development Environment (Authoring)
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployments-installing-cp4ba-multi-pattern-production-deployment
 
@@ -1474,7 +1474,7 @@ https://cpd-cp4ba-dev.${apps_endpoint}/usermgmt/v1/user/cpadmin?add_roles=true
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployment-recommended-validating-your-production
 
-You can further verify the environemnts and get important information. But before running anything else then --help follow additional steps for script configuration.
+You can further verify the environments and get important information. But before running anything else then --help follow additional steps for script configuration.
 ```bash
 oc project cp4ba-dev
 /usr/install/cp4ba-dev/ibm-cp-automation/inventory/\
@@ -1548,7 +1548,7 @@ Optional custom CPFS admin password - follow https://www.ibm.com/docs/en/cloud-p
 
 Optional custom Zen certificates - follow https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=security-customizing-cloud-pak-entry-point
 
-## Cloud Pak for Business Automation Test Environment
+## Cloud Pak for Business Automation Test Environment (Runtime)
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/23.0.2?topic=deployments-installing-cp4ba-multi-pattern-production-deployment
 
