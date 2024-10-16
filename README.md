@@ -726,7 +726,8 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/24.0.0?topic=d
 mkdir /usr/install/cp4ba-dev
 
 # Download the package
-git clone -b 24.0.0-IF002 https://github.com/icp4a/cert-kubernetes.git /usr/install/cp4ba-dev/cert-kubernetes
+git clone -b 24.0.0-IF002 https://github.com/icp4a/cert-kubernetes.git \
+/usr/install/cp4ba-dev/cert-kubernetes
 ```
 
 ### Setting up the cluster by running a script
@@ -1004,7 +1005,8 @@ sed -i \
 -e 's/postgresql.STUDIO_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.STUDIO_DB_USER_PASSWORD="{Base64}'$PASSWORD_BASE64'"/g' \
 /usr/install/cp4ba-dev/\
-cert-kubernetes/scripts/cp4ba-prerequisites/project/cp4ba-dev/propertyfile/cp4ba_db_name_user.property
+cert-kubernetes/scripts/\
+cp4ba-prerequisites/project/cp4ba-dev/propertyfile/cp4ba_db_name_user.property
 ```
 
 Update values for cp4ba_LDAP.property
@@ -1185,7 +1187,8 @@ oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 
 Apply secrets which are in /usr/install/cp4ba-dev/cert-kubernetes/scripts/cp4ba-prerequisites/project/cp4ba-dev/secret_template/.
 ```bash
-/usr/install/cp4ba-dev/cert-kubernetes/scripts/cp4ba-prerequisites/project/cp4ba-dev/create_secret.sh
+/usr/install/cp4ba-dev/cert-kubernetes/scripts/\
+cp4ba-prerequisites/project/cp4ba-dev/create_secret.sh
 ```
 
 ### Validate connectivity
@@ -1203,7 +1206,8 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/24.0.0?topic=c
 
 Run deployment script
 ```bash
-# Switch to Project # Switch to Project #TODO should not be needed, last seen 24.0.0 IF002 2024-10-15
+# Switch to Project
+# TODO should not be needed, last seen 24.0.0 IF002 2024-10-15
 oc project cp4ba-dev
 
 /usr/install/cp4ba-dev/cert-kubernetes/scripts/cp4a-deployment.sh -n cp4ba-dev
@@ -1331,13 +1335,13 @@ generated-cr/project/cp4ba-dev/ibm_cp4a_cr_final.yaml
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/24.0.0?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
 
-Add permissive network policy to enable anything from cp4ba-dev namespace to reach to LDAP and DB
+Add permissive network policy to enable anything from cp4ba-dev namespace to reach anything in the cluster
 ```bash
 echo "
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: custom-permit-ldap-db
+  name: custom-permit-cluster-communication
   namespace: cp4ba-dev
 spec:
   podSelector: {}
@@ -1346,14 +1350,7 @@ spec:
   egress:
     - to:
         - podSelector: {}
-          namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: cp4ba-postgresql
-    - to:
-        - podSelector: {}
-          namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: cp4ba-openldap
+          namespaceSelector: {}
 " | oc apply -f -
 ```
 
@@ -1510,20 +1507,12 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/24.0.0?topic=d
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/24.0.0?topic=deployment-preparing-client-connect-cluster
 
 ```bash
-# Create directory for cp4ba-test
+# Create directory for cp4ba-dev
 mkdir /usr/install/cp4ba-test
 
 # Download the package
-curl https://raw.githubusercontent.com/IBM/cloud-pak/master/repo/case/\
-ibm-cp-automation/5.1.2/ibm-cp-automation-5.1.2.tgz \
---output /usr/install/cp4ba-test/ibm-cp-automation-5.1.2.tgz
-
-# Extract the package
-tar xzvf /usr/install/cp4ba-test/ibm-cp-automation-5.1.2.tgz -C /usr/install/cp4ba-test/
-
-# Extract cert-kubernetes
-tar xvf /usr/install/cp4ba-test/cert-k8s-23.0.2.tar \
--C /usr/install/cp4ba-test/
+git clone -b 24.0.0-IF002 https://github.com/icp4a/cert-kubernetes.git \
+/usr/install/cp4ba-test/cert-kubernetes
 ```
 
 ### Setting up the cluster by running a script
@@ -1862,7 +1851,8 @@ sed -i \
 -e 's/postgresql.BAW_RUNTIME_DB_USER_PASSWORD="{Base64}<yourpassword>"/'\
 'postgresql.BAW_RUNTIME_DB_USER_PASSWORD="{Base64}'$PASSWORD_BASE64'"/g' \
 /usr/install/cp4ba-test/\
-cert-kubernetes/scripts/cp4ba-prerequisites/project/cp4ba-test/propertyfile/cp4ba_db_name_user.property
+cert-kubernetes/scripts/\
+cp4ba-prerequisites/project/cp4ba-test/propertyfile/cp4ba_db_name_user.property
 ```
 
 Update values for cp4ba_LDAP.property
@@ -2042,7 +2032,8 @@ oc --namespace cp4ba-postgresql exec statefulset/postgresql -- /bin/bash -c \
 Apply secrets which are in /usr/install/cp4ba-test/cert-kubernetes/scripts/cp4ba-prerequisites/project/cp4ba-test/secret_template/.
 ```bash
 # Apply secrets
-/usr/install/cp4ba-test/cert-kubernetes/scripts/cp4ba-prerequisites/project/cp4ba-test/create_secret.sh
+/usr/install/cp4ba-test/cert-kubernetes/scripts\
+/cp4ba-prerequisites/project/cp4ba-test/create_secret.sh
 ```
 
 ### Validate connectivity
@@ -2060,7 +2051,8 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/24.0.0?topic=c
 
 Run deployment script  
 ```bash
-# Switch to Project #TODO should not be needed, last seen 24.0.0 IF002 2024-10-15
+# Switch to Project
+# TODO should not be needed, last seen 24.0.0 IF002 2024-10-15
 oc project cp4ba-test
 
 /usr/install/cp4ba-test/cert-kubernetes/scripts/cp4a-deployment.sh -n cp4ba-test
@@ -2194,13 +2186,13 @@ generated-cr/project/cp4ba-test/ibm_cp4a_cr_final.yaml
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/24.0.0?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
 
-Add permissive network policy to enable anything from cp4ba-test namespace to reach to LDAP and DB
+Add permissive network policy to enable anything from cp4ba-test namespace to reach anything in the cluster
 ```bash
 echo "
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: custom-permit-ldap-db
+  name: custom-permit-cluster-communication
   namespace: cp4ba-test
 spec:
   podSelector: {}
@@ -2209,14 +2201,7 @@ spec:
   egress:
     - to:
         - podSelector: {}
-          namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: cp4ba-postgresql
-    - to:
-        - podSelector: {}
-          namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: cp4ba-openldap
+          namespaceSelector: {}
 " | oc apply -f -
 ```
 
