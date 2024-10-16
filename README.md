@@ -1335,22 +1335,20 @@ generated-cr/project/cp4ba-dev/ibm_cp4a_cr_final.yaml
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/24.0.0?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
 
-Add permissive network policy to enable anything from cp4ba-dev namespace to reach anything in the cluster
+Add permissive network policy to enable anything from cp4ba-dev namespace to reach anything
 ```bash
 echo "
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: custom-permit-cluster-communication
+  name: custom-permit-all-communication
   namespace: cp4ba-dev
 spec:
   podSelector: {}
   policyTypes:
     - Egress
   egress:
-    - to:
-        - podSelector: {}
-          namespaceSelector: {}
+    - {}
 " | oc apply -f -
 ```
 
@@ -2186,22 +2184,20 @@ generated-cr/project/cp4ba-test/ibm_cp4a_cr_final.yaml
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/24.0.0?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
 
-Add permissive network policy to enable anything from cp4ba-test namespace to reach anything in the cluster
+Add permissive network policy to enable anything from cp4ba-dev namespace to reach anything
 ```bash
 echo "
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: custom-permit-cluster-communication
-  namespace: cp4ba-test
+  name: custom-permit-all-communication
+  namespace: cp4ba-dev
 spec:
   podSelector: {}
   policyTypes:
     - Egress
   egress:
-    - to:
-        - podSelector: {}
-          namespaceSelector: {}
+    - {}
 " | oc apply -f -
 ```
 
