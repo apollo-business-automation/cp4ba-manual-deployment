@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## 2024-10-17
+
+### Changed
+
+- Update to CP4BA version 24.0.0 IF002
+
 ## 2024-03-12
 
 ### Fixed
