@@ -2248,7 +2248,7 @@ echo $zen_api_key
 # Change CPFS namespace for cp4a-post-install.sh script and add password and zen api key
 sed -i \
 -e 's/CP4BA_COMMON_SERVICES_NAMESPACE="ibm-common-services"/'\
-'CP4BA_COMMON_SERVICES_NAMESPACE="cp4ba-dev"/g' \
+'CP4BA_COMMON_SERVICES_NAMESPACE="cp4ba-test"/g' \
 -e 's/PROBE_USER_API_KEY=/'\
 'PROBE_USER_API_KEY="'${zen_api_key}'"/g' \
 -e 's/PROBE_USER_NAME=/'\
