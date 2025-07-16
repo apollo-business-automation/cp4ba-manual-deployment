@@ -1,7 +1,6 @@
 # Cloud Pak for Business Automation Production deployment manual installation ✍️<!-- omit in toc -->
 
-For version 24.0.0 IF002
-https://www.ibm.com/support/pages/node/7163631
+For version 25.0.0
 
 Installs BAW and FNCM environment.
 
