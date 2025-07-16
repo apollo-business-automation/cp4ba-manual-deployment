@@ -726,7 +726,7 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/24.0.0?topic=d
 mkdir /usr/install/cp4ba-dev
 
 # Download the package
-git clone -b 24.0.0-IF002 https://github.com/icp4a/cert-kubernetes.git \
+git clone -b 25.0.0 https://github.com/icp4a/cert-kubernetes.git \
 /usr/install/cp4ba-dev/cert-kubernetes
 ```
 
@@ -855,8 +855,6 @@ Enter the alias name(s) for the database server(s)/instance(s) to be used by the
 (NOTE: NOT the host name of the database server, and CANNOT include a dot[.] character)
 (NOTE: This key supports comma-separated lists (for example: dbserver1,dbserver2,dbserver3)
 The alias name(s): postgresql
-
-Do you want to restrict network egress to unknown external destination for this CP4BA deployment? (Notes: CP4BA 24.0.0 prevents all network egress to unknown destinations by default. You can either (1) enable all egress or (2) accept the new default and create network policies to allow your specific communication targets as documented in the knowledge center.) (Yes/No, default: Yes): Yes
 
 Do you want to use an external Postgres DB [YOU NEED TO CREATE THIS POSTGRESQL DB BY YOURSELF FIRST BEFORE APPLY CP4BA CUSTOM RESOURCE. PLEASE REFER THE KNOWLEDGE CENTER: https://www.ibm.com/docs/en/cloud-paks/foundational-services/4.6?topic=im-setting-up-external-postgresql-database-server#dbcreate] as IM metastore DB for this CP4BA deployment? (Notes: IM service can use an external Postgres DB to store IM data. If select "Yes", IM service uses an external Postgres DB as IM metastore DB. If select "No", IM service uses an embedded cloud native postgresql DB as IM metastore DB.) (Yes/No, default: No): No
 
@@ -1030,7 +1028,7 @@ sed -i \
 'LDAP_BASE_DN="dc=cp,dc=internal"/g' \
 -e 's/LDAP_BIND_DN="<Required>"/'\
 'LDAP_BIND_DN="cn=admin,dc=cp,dc=internal"/g' \
--e 's/LDAP_BIND_DN_PASSWORD="{Base64}<Required>"/'\
+-e 's/LDAP_BIND_DN_PASSWORD="{xor}<Required>"/'\
 'LDAP_BIND_DN_PASSWORD="{Base64}'$PASSWORD_BASE64'"/g' \
 -e 's/LDAP_SSL_ENABLED="True"/'\
 'LDAP_SSL_ENABLED="False"/g' \
@@ -1062,9 +1060,9 @@ sed -i \
 'CONTENT.APPLOGIN_USER="cpadmin"/g' \
 -e 's/CONTENT.APPLOGIN_PASSWORD="{Base64}<Required>"/'\
 'CONTENT.APPLOGIN_PASSWORD="{Base64}'$PASSWORD_BASE64'"/g' \
--e 's/CONTENT.LTPA_PASSWORD="{Base64}<Required>"/'\
+-e 's/CONTENT.LTPA_PASSWORD="{xor}<Required>"/'\
 'CONTENT.LTPA_PASSWORD="{Base64}'$PASSWORD_BASE64'"/g' \
--e 's/CONTENT.KEYSTORE_PASSWORD="{Base64}<Required>"/'\
+-e 's/CONTENT.KEYSTORE_PASSWORD="{xor}<Required>"/'\
 'CONTENT.KEYSTORE_PASSWORD="{Base64}'$PASSWORD_BASE64'"/g' \
 -e 's/CONTENT_INITIALIZATION.LDAP_ADMIN_USER_NAME="<Required>"/'\
 'CONTENT_INITIALIZATION.LDAP_ADMIN_USER_NAME="cpadmin"/g' \
@@ -1084,9 +1082,9 @@ sed -i \
 'BAN.APPLOGIN_USER="cpadmin"/g' \
 -e 's/BAN.APPLOGIN_PASSWORD="{Base64}<Required>"/'\
 'BAN.APPLOGIN_PASSWORD="{Base64}'$PASSWORD_BASE64'"/g' \
--e 's/BAN.LTPA_PASSWORD="{Base64}<Required>"/'\
+-e 's/BAN.LTPA_PASSWORD="{xor}<Required>"/'\
 'BAN.LTPA_PASSWORD="{Base64}'$PASSWORD_BASE64'"/g' \
--e 's/BAN.KEYSTORE_PASSWORD="{Base64}<Required>"/'\
+-e 's/BAN.KEYSTORE_PASSWORD="{xor}<Required>"/'\
 'BAN.KEYSTORE_PASSWORD="{Base64}'$PASSWORD_BASE64'"/g' \
 -e 's/BASTUDIO.ADMIN_USER="<Required>"/'\
 'BASTUDIO.ADMIN_USER="cpadmin"/g' \
@@ -1337,23 +1335,6 @@ generated-cr/project/cp4ba-dev/ibm_cp4a_cr_final.yaml
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/24.0.0?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
 
-Add permissive network policy to enable anything from cp4ba-dev namespace to reach anything
-```bash
-echo "
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: custom-permit-all-communication
-  namespace: cp4ba-dev
-spec:
-  podSelector: {}
-  policyTypes:
-    - Egress
-  egress:
-    - {}
-" | oc apply -f -
-```
-
 Apply CR  
 ```bash
 oc apply -n cp4ba-dev -f /usr/install/cp4ba-dev/cert-kubernetes/scripts/\
@@ -1501,7 +1482,7 @@ Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/24.0.0?topic=d
 mkdir /usr/install/cp4ba-test
 
 # Download the package
-git clone -b 24.0.0-IF002 https://github.com/icp4a/cert-kubernetes.git \
+git clone -b 25.0.0 https://github.com/icp4a/cert-kubernetes.git \
 /usr/install/cp4ba-test/cert-kubernetes
 ```
 
@@ -1634,8 +1615,6 @@ Where do you want to deploy Cloud Pak for Business Automation?
 Enter the name for an existing project (namespace): cp4ba-test
 Using project cp4ba-test...
 
-
-Do you want to restrict network egress to unknown external destination for this CP4BA deployment? (Notes: CP4BA 24.0.0 prevents all network egress to unknown destinations by default. You can either (1) enable all egress or (2) accept the new default and create network policies to allow your specific communication targets as documented in the knowledge center.) (Yes/No, default: Yes): Yes
 
 
 Do you want to use an external Postgres DB [YOU NEED TO CREATE THIS POSTGRESQL DB BY YOURSELF FIRST BEFORE APPLY CP4BA CUSTOM RESOURCE. PLEASE REFER THE KNOWLEDGE CENTER: https://www.ibm.com/docs/en/cloud-paks/foundational-services/4.6?topic=im-setting-up-external-postgresql-database-server#dbcreate] as IM metastore DB for this CP4BA deployment? (Notes: IM service can use an external Postgres DB to store IM data. If select "Yes", IM service uses an external Postgres DB as IM metastore DB. If select "No", IM service uses an embedded cloud native postgresql DB as IM metastore DB.) (Yes/No, default: No): no
@@ -1811,7 +1790,7 @@ sed -i \
 'LDAP_BASE_DN="dc=cp,dc=internal"/g' \
 -e 's/LDAP_BIND_DN="<Required>"/'\
 'LDAP_BIND_DN="cn=admin,dc=cp,dc=internal"/g' \
--e 's/LDAP_BIND_DN_PASSWORD="{Base64}<Required>"/'\
+-e 's/LDAP_BIND_DN_PASSWORD="{xor}<Required>"/'\
 'LDAP_BIND_DN_PASSWORD="{Base64}'$PASSWORD_BASE64'"/g' \
 -e 's/LDAP_SSL_ENABLED="True"/'\
 'LDAP_SSL_ENABLED="False"/g' \
@@ -1843,9 +1822,9 @@ sed -i \
 'CONTENT.APPLOGIN_USER="cpadmin"/g' \
 -e 's/CONTENT.APPLOGIN_PASSWORD="{Base64}<Required>"/'\
 'CONTENT.APPLOGIN_PASSWORD="{Base64}'$PASSWORD_BASE64'"/g' \
--e 's/CONTENT.LTPA_PASSWORD="{Base64}<Required>"/'\
+-e 's/CONTENT.LTPA_PASSWORD="{xor}<Required>"/'\
 'CONTENT.LTPA_PASSWORD="{Base64}'$PASSWORD_BASE64'"/g' \
--e 's/CONTENT.KEYSTORE_PASSWORD="{Base64}<Required>"/'\
+-e 's/CONTENT.KEYSTORE_PASSWORD="{xor}<Required>"/'\
 'CONTENT.KEYSTORE_PASSWORD="{Base64}'$PASSWORD_BASE64'"/g' \
 -e 's/CONTENT_INITIALIZATION.LDAP_ADMIN_USER_NAME="<Required>"/'\
 'CONTENT_INITIALIZATION.LDAP_ADMIN_USER_NAME="cpadmin"/g' \
@@ -1865,9 +1844,9 @@ sed -i \
 'BAN.APPLOGIN_USER="cpadmin"/g' \
 -e 's/BAN.APPLOGIN_PASSWORD="{Base64}<Required>"/'\
 'BAN.APPLOGIN_PASSWORD="{Base64}'$PASSWORD_BASE64'"/g' \
--e 's/BAN.LTPA_PASSWORD="{Base64}<Required>"/'\
+-e 's/BAN.LTPA_PASSWORD="{xor}<Required>"/'\
 'BAN.LTPA_PASSWORD="{Base64}'$PASSWORD_BASE64'"/g' \
--e 's/BAN.KEYSTORE_PASSWORD="{Base64}<Required>"/'\
+-e 's/BAN.KEYSTORE_PASSWORD="{xor}<Required>"/'\
 'BAN.KEYSTORE_PASSWORD="{Base64}'$PASSWORD_BASE64'"/g' \
 -e 's/BAW_RUNTIME.ADMIN_USER="<Required>"/'\
 'BAW_RUNTIME.ADMIN_USER="cpadmin"/g' \
@@ -2125,23 +2104,6 @@ generated-cr/project/cp4ba-test/ibm_cp4a_cr_final.yaml
 
 Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/24.0.0?topic=pycc-recommended-preparing-databases-secrets-your-chosen-capabilities-by-running-script
 
-Add permissive network policy to enable anything from cp4ba-dev namespace to reach anything
-```bash
-echo "
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: custom-permit-all-communication
-  namespace: cp4ba-test
-spec:
-  podSelector: {}
-  policyTypes:
-    - Egress
-  egress:
-    - {}
-" | oc apply -f -
-```
-
 Apply CR  
 ```bash
 oc apply -n cp4ba-test -f /usr/install/cp4ba-test/cert-kubernetes/scripts/\
@@ -2278,8 +2240,10 @@ Optional custom CPFS admin password - follow https://www.ibm.com/docs/en/cloud-p
 
 #### Connect to Authoring
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/24.0.0?topic=customizing-business-automation-workflow-runtime-connect-workflow-authoring
-The exchange needs to happen periodically based on the validity of the certificates.
+Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/25.0.0?topic=customizing-business-automation-workflow-runtime-connect-workflow-authoring
+The exchange needs to happen periodically based on the validity of the certificates.  
+Note that if you supplied custom certificates for Zen Route (cpd-) you need to add the secret containing tls.crt to the trusted lists as well.
+
 
 ```bash
 # Get Zen CA from dev environment
@@ -2341,6 +2305,7 @@ stringData:
 " | oc apply -f -
 
 # Configure Workflow Runtime to trust Workflow Authoring TLS
+# Note that if you supplied custom certificates for Zen Route (cpd-) you need to add the secret containing tls.crt to the trusted lists as well.
 yq -i '.spec.baw_configuration[0].tls = {"tls_trust_list": '\
 '["baw-tls-zen-secret", "baw-routerca-secret"]}' \
 /usr/install/cp4ba-test/cert-kubernetes/scripts/\
@@ -2359,34 +2324,9 @@ yq -i '.spec.baw_configuration[0].workflow_center = '\
 generated-cr/project/cp4ba-test/ibm_cp4a_cr_final.yaml
 ```
 
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/24.0.0?topic=security-configuring-cluster#task_egd_lwt_wlb__external
-```bash
-# Add permissive Network Policy for Workflow Runtime to be able to reach Workflow Authoring
-# This policy should be further limited to a specific IP of either internal router 
-# if both Runtime and Authoring are running in the same cluster 
-# or to a specific external IP of a different cluster if Runtime and Authoring
-# are running in separate clusters
-echo "
-kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
-metadata:
-  name: icp4adeploy-cp4a-egress-external-app-baw
-  namespace: cp4ba-test
-spec:
-  podSelector:
-    matchLabels:
-      com.ibm.cp4a.networking/egress-external-app-component: BAW
-  policyTypes:
-    - Egress
-  egress:
-    - ports:
-        - protocol: TCP
-          port: 443
-" | oc apply -f -
-```
-
 ```bash
 # Configure Workflow Authoring to trust Workflow Runtime TLS
+# Note that if you supplied custom certificates for Zen Route (cpd-) you need to add the secret containing tls.crt to the trusted lists as well.
 yq -i '.spec.bastudio_configuration.tls = {"tlsTrustList": '\
 '["bawaut-tls-zen-secret", "bawaut-tls-cs-secret", "bawaut-routerca-secret"]}' \
 /usr/install/cp4ba-dev/cert-kubernetes/scripts/\
@@ -2407,32 +2347,6 @@ yq -i '.spec.workflow_authoring_configuration.environment_config = '\
 '"cpd-cp4ba-test.'$apps_endpoint',cp-console-cp4ba-test.'$apps_endpoint'"}}' \
 /usr/install/cp4ba-dev/cert-kubernetes/scripts/\
 generated-cr/project/cp4ba-dev/ibm_cp4a_cr_final.yaml
-```
-
-Based on https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/24.0.0?topic=security-configuring-cluster#task_egd_lwt_wlb__external
-```bash
-# Add permissive Network Policy for Workflow Authoring to be able to reach Workflow Runtime
-# This policy should be further limited to a specific IP of either internal router 
-# if both Runtime and Authoring are running in the same cluster 
-# or to a specific external IP of a different cluster if Runtime and Authroing
-# are running in separate clusters
-echo "
-kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
-metadata:
-  name: icp4adeploy-cp4a-egress-external-app-bas
-  namespace: cp4ba-dev
-spec:
-  podSelector:
-    matchLabels:
-      com.ibm.cp4a.networking/egress-external-app-component: BAS
-  policyTypes:
-    - Egress
-  egress:
-    - ports:
-        - protocol: TCP
-          port: 443
-" | oc apply -f -
 ```
 
 ```bash
