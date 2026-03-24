@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## 2026-03-24
+
+### Changed
+
+- Update to CP4BA version 25.0.0
+- Changed from bitnami to bitnamilegacy
+
 ## 2024-10-17
 
 ### Changed
