@@ -403,7 +403,7 @@ spec:
             - name: ldap-port
               containerPort: 1389
               protocol: TCP
-          image: 'bitnami/openldap:2.6.8'
+          image: 'bitnamilegacy/openldap:2.6.8'
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - name: data
@@ -647,7 +647,7 @@ cat >>/usr/install/postgresql.yaml <<EOF
             - name: postgresql-extended-config
               mountPath: /bitnami/postgresql/conf/conf.d/
           terminationMessagePolicy: File
-          image: 'docker.io/bitnami/postgresql:14.13.0-debian-12-r13'
+          image: 'docker.io/bitnamilegacy/postgresql:14.13.0-debian-12-r13'
       volumes:
         - name: empty-dir
           emptyDir: {}
